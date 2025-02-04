@@ -6,8 +6,8 @@
 iPlayr is a modern and minimalistic music player designed to provide a seamless playback experience using Apple Music. The app features a Cover Flow-inspired UI and intuitive controls that replicate the nostalgic iPod feel while leveraging the power of SwiftUI.
 
 🖼 Screenshots
-![ss1](https://github.com/user-attachments/assets/cef66421-5c33-467d-b5cf-d99b1188cddc)
 ![ss2](https://github.com/user-attachments/assets/36231c9b-2f6e-4c23-b019-1ccb53b878eb)
+<img src="https://github.com/user-attachments/assets/cef66421-5c33-467d-b5cf-d99b1188cddc" width="642" height="1389" />
 ![ss3](https://github.com/user-attachments/assets/54f593e7-cd5a-428c-9173-ee4eba8a47cf)
 ![ss4](https://github.com/user-attachments/assets/2d113376-bf49-4304-8df0-463637cb365e)
 ![ss5](https://github.com/user-attachments/assets/e8d7239e-bbc3-4c71-9326-322edc780da5)
