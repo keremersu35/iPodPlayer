@@ -39,7 +39,9 @@ iPlayr is a modern and minimalistic music player designed to provide a seamless 
 - iOS 17+ device
 - An active Apple Music subscription
 
-🛠 Installation
+<br>
+
+## 🛠 Installation
 
 ### 1. Clone or Download the repository:
   You can clone with:
