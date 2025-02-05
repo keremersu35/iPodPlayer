@@ -43,12 +43,12 @@ iPlayr is a modern and minimalistic music player designed to provide a seamless 
 
 ## 🛠 Installation
 
-### 1. Clone or Download the repository:
-  You can clone with:
-  git clone https://github.com/keremersu35/iPodPlayer.git
+1. Clone or Download the repository:
+You can clone with:
+git clone https://github.com/keremersu35/iPodPlayer.git
 
-### 2. Open the project in Xcode
-### 3. Run the app on the connected device.
+3. Open the project in Xcode
+4. Run the app on the connected device.
 
 <br>
 
