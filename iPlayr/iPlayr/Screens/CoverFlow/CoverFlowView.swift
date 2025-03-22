@@ -169,12 +169,27 @@ struct CarouselViewControllerWrapper: UIViewControllerRepresentable {
             uiViewController.dataSource = dataSource
             uiViewController.carousel.reloadData()
         }
-
-        if uiViewController.carousel.currentItemIndex != selectedIndex {
-            DispatchQueue.main.async {
-                uiViewController.carousel.scrollToItem(at: selectedIndex, animated: true)
-                uiViewController.carousel.reloadData()
-            }
+        
+        let currentOffset = uiViewController.carousel.scrollOffset
+        let targetOffset = CGFloat(selectedIndex)
+        
+        if abs(currentOffset - targetOffset) > 0.01 {
+            uiViewController.carousel.layer.removeAllAnimations()
+            
+            let distance = abs(targetOffset - currentOffset)
+            let isRapidScrolling = distance > 2.0
+            let duration = isRapidScrolling ? min(0.3, 0.05 * distance * 1.75) : min(0.5, 0.1 * distance * 1.75)
+            let animationOptions: UIView.AnimationOptions = isRapidScrolling ? .curveEaseOut : .curveEaseInOut
+            
+            UIView.animate(withDuration: duration, delay: 0, options: animationOptions, animations: {
+                uiViewController.carousel.scrollOffset = targetOffset
+            }, completion: { finished in
+                if finished {
+                    if abs(uiViewController.carousel.scrollOffset - targetOffset) < 0.1 {
+                        uiViewController.carousel.reloadData()
+                    }
+                }
+            })
         }
     }
 }
