@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0C348FBA2E38281D00E20A87 /* Equatable in Frameworks */ = {isa = PBXBuildFile; productRef = 0C348FB92E38281D00E20A87 /* Equatable */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		0C4A05AF2CD7B2570083D5C9 /* iPlayr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iPlayr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0C348FBA2E38281D00E20A87 /* Equatable in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = iPlayr;
 			packageProductDependencies = (
+				0C348FB92E38281D00E20A87 /* Equatable */,
 			);
 			productName = iPlayr;
 			productReference = 0C4A05AF2CD7B2570083D5C9 /* iPlayr.app */;
@@ -91,7 +97,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1610;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					0C4A05AE2CD7B2570083D5C9 = {
 						CreatedOnToolsVersion = 16.1;
@@ -108,6 +114,7 @@
 			mainGroup = 0C4A05A62CD7B2560083D5C9;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				0C348FB82E38281D00E20A87 /* XCRemoteSwiftPackageReference "equatable" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0C4A05B02CD7B2570083D5C9 /* Products */;
@@ -175,6 +182,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 5H8M2557R8;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -244,6 +252,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 5H8M2557R8;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -280,7 +289,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 5H8M2557R8;
 				ENABLE_PREVIEWS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -321,7 +329,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 5H8M2557R8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iPlayr/Info.plist;
@@ -375,6 +382,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0C348FB82E38281D00E20A87 /* XCRemoteSwiftPackageReference "equatable" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ordo-one/equatable.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.8;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0C348FB92E38281D00E20A87 /* Equatable */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0C348FB82E38281D00E20A87 /* XCRemoteSwiftPackageReference "equatable" */;
+			productName = Equatable;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0C4A05A72CD7B2570083D5C9 /* Project object */;
 }

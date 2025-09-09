@@ -1,7 +1,9 @@
 import SwiftUI
 import _MusicKit_SwiftUI
 import Combine
+import Equatable
 
+@Equatable
 struct PlayerView: View {
     @State var id: String
     @State var trackIndex: Int

@@ -1,7 +1,9 @@
 import SwiftUI
 import MusicKit
 import Combine
+import Equatable
 
+@Equatable
 struct SignInView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @State private var cancellables = Set<AnyCancellable>()

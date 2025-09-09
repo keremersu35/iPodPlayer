@@ -5,7 +5,6 @@ enum NavigationType: Hashable {
     case push(Route)
     case unwind(Route)
     case resetTo(Route)
-    case snackbar(String)
 }
 
 struct NavigateAction {

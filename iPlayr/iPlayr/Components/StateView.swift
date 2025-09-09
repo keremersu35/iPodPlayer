@@ -1,4 +1,5 @@
 import SwiftUI
+import Equatable
 
 enum ViewState: Equatable {
     case loading
@@ -7,6 +8,7 @@ enum ViewState: Equatable {
     case error(message: String)
 }
 
+@Equatable
 struct StateView: View {
     let state: ViewState
     

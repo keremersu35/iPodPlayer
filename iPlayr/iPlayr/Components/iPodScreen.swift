@@ -1,5 +1,7 @@
 import SwiftUI
+import Equatable
 
+@Equatable
 struct iPlayrScreen: View {
     @State private var routes: [Route] = []
     @State private var hasRightView: Bool = true
@@ -12,7 +14,6 @@ struct iPlayrScreen: View {
         GeometryReader { geometry in
             contentView(geometry: geometry)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                .snackbar(message: snackbarMessage, isVisible: $isShowingSnackbar)
                 .frame(height: 300)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -69,10 +70,6 @@ struct iPlayrScreen: View {
 
         case .resetTo(let route):
             routes = [route]
-
-        case .snackbar(let message):
-            snackbarMessage = message
-            isShowingSnackbar = true
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

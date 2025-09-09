@@ -1,13 +1,15 @@
 import SwiftUI
 import MusicKit
+import Equatable
 
-struct CollectionMenuModel {
+struct CollectionMenuModel: Equatable {
     let artwork: Artwork?
     let id: String
     let name: String
     let description: String
 }
 
+@Equatable
 struct CollectionMenuItem: View {
     var model: CollectionMenuModel
     var isSelected: Bool

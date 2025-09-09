@@ -1,5 +1,7 @@
 import SwiftUI
+import Equatable
 
+@Equatable
 struct StatusBar: View {
     @EnvironmentObject private var playerManager: AppleMusicManager
     var title: String
@@ -43,6 +45,7 @@ struct StatusBar: View {
     }
 }
 
+@Equatable
 struct BatteryIconView: View {
     var level: CGFloat
     private let batteryFillColors: [Color] = [.batteryFill1, .batteryFill2, .batteryFill3, .batteryFill4,

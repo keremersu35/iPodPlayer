@@ -2,7 +2,9 @@ import SwiftUI
 import MusicKit
 import UIKit
 import Combine
+import Equatable
 
+@Equatable
 struct CoverFlowView: View {
     @EnvironmentObject var iPlayrController: iPlayrButtonController
     @StateObject private var albumManager = AlbumManager()

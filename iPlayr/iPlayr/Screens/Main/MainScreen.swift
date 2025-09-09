@@ -1,5 +1,7 @@
 import SwiftUI
+import Equatable
 
+@Equatable
 struct iPlayrView: View {
     @StateObject private var iPlayrController: iPlayrButtonController = .init()
     @EnvironmentObject private var theme: ThemeManager

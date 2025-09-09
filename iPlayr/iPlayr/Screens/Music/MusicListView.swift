@@ -1,6 +1,8 @@
 import SwiftUI
 import Combine
+import Equatable
 
+@Equatable
 struct MusicListView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @State private var cancellables = Set<AnyCancellable>()

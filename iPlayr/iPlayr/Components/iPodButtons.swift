@@ -1,5 +1,7 @@
 import SwiftUI
+import Equatable
 
+@Equatable
 struct iPlayrButtons: View {
     @State private var lastAngle: CGFloat = 0
     @State private var counter: CGFloat = 0
@@ -76,8 +78,10 @@ struct iPlayrButtons: View {
     }
 }
 
+@Equatable
 struct iPlayrIconButton: View {
     let imageName: String
+    @EquatableIgnoredUnsafeClosure 
     let onTapAction: () -> Void
     @EnvironmentObject private var theme: ThemeManager
     
