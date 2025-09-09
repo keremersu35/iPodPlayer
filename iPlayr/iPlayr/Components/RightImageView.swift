@@ -1,9 +1,7 @@
 import SwiftUI
 import Combine
 import MusicKit
-import Equatable
 
-@Equatable
 struct RightImageView: View {
     @StateObject private var albumManager = AlbumManager()
     @State private var currentImageIndex = 0

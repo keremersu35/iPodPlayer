@@ -1,8 +1,6 @@
 import SwiftUI
 import Combine
-import Equatable
 
-@Equatable
 struct PlaylistsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @StateObject private var playlistManager = PlaylistManager()

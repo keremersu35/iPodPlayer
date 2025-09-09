@@ -1,5 +1,4 @@
 import SwiftUI
-import Equatable
 
 struct Menu: Identifiable, Equatable {
     let id: Int
@@ -7,7 +6,6 @@ struct Menu: Identifiable, Equatable {
     let next: Bool
 }
 
-@Equatable
 struct MenuItemView: View {
     var menu: Menu
     var isSelected: Bool

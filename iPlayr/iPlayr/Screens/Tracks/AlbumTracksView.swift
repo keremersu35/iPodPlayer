@@ -1,9 +1,7 @@
 import SwiftUI
 import Combine
 import MusicKit
-import Equatable
 
-@Equatable
 struct AlbumTracksView: View {
     let collectionInfo: CollectionInfoModel
     @EnvironmentObject private var iPlayrController: iPlayrButtonController

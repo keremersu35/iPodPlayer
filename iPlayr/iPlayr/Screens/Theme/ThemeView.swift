@@ -1,8 +1,6 @@
 import SwiftUI
 import Combine
-import Equatable
 
-@Equatable
 struct ThemeView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @State private var cancellables = Set<AnyCancellable>()

@@ -1,9 +1,7 @@
 import SwiftUI
 import MusicKit
 import Combine
-import Equatable
 
-@Equatable
 struct HomeListView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @Environment(\.navigate) private var navigate

@@ -1,7 +1,5 @@
 import SwiftUI
-import Equatable
 
-@Equatable
 struct iPlayrScreen: View {
     @State private var routes: [Route] = []
     @State private var hasRightView: Bool = true

@@ -1,7 +1,5 @@
 import SwiftUI
-import Equatable
 
-@Equatable
 struct LoadingView: View {
     var body: some View {
         ProgressView()
