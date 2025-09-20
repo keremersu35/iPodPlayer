@@ -4,59 +4,70 @@ import MusicKit
 
 struct SongListView: View {
     let album: Album
+    let isSelected: Bool
+    @Binding var isSongList: Bool
     @EnvironmentObject var iPlayrController: iPlayrButtonController
     @StateObject private var albumManager = AlbumManager()
     @State private var cancellables = Set<AnyCancellable>()
-    @Binding var isFaceUp: Bool
-    @State private var selectedIndex : Int = 0
+    @State private var selectedIndex = 0
     @State private var isLoading = true
-    
+    private var shouldLoad: Bool { isSongList && isSelected }
+    private var tracks: [Track] { albumManager.savedAlbumsTracks?.compactMap { $0 } ?? [] }
+
     var body: some View {
         VStack(spacing: 0) {
+            Group {
+                albumHeader
+                tracksList
+            }
+            .opacity(isLoading ? 0 : 1)
+
             if isLoading {
                 LoadingView()
-            } else {
-                VStack {
-                    Text(album.title)
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 4)
-                        .padding(.leading, 8)
-                        .lineLimit(1)
-                    
-                    Text(album.artistName)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 4)
-                        .padding(.leading, 8)
-                        .lineLimit(1)
-                }
-                .background(Color.songListBackground)
-
-                tracksScrollView
-                    .padding(.bottom, 26)
             }
         }
-        .onAppear(perform: setup)
-        .onDisappear(perform: cancelSubscriptions)
-        .task { await albumManager.getAlbumTracks(id: album.id.rawValue) }
+        .onDisappear(perform: cleanup)
+        .onChange(of: shouldLoad, initial: false) { _, shouldLoad in
+            if shouldLoad { loadTracks() }
+        }
         .onReceive(albumManager.$savedAlbumsTracks) { tracks in
-            iPlayrController.menuCount = tracks?.count ?? 0
             isLoading = tracks == nil
         }
     }
-    
-    @ViewBuilder
-    private var tracksScrollView: some View {
-        ScrollViewReader { scrollViewProxy in
+
+    private var albumHeader: some View {
+        VStack(spacing: 0) {
+            albumTitle
+            artistName
+        }
+        .background(Color.songListBackground)
+    }
+
+    private var albumTitle: some View {
+        Text(album.title)
+            .font(.system(size: 20, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 4)
+            .padding(.leading, 8)
+            .lineLimit(1)
+    }
+
+    private var artistName: some View {
+        Text(album.artistName)
+            .font(.system(size: 18, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 4)
+            .padding(.leading, 8)
+            .lineLimit(1)
+    }
+
+    private var tracksList: some View {
+        ScrollViewReader { proxy in
             ScrollView {
-                VStack(spacing: 0) {
-                    let savedTracks = albumManager.savedAlbumsTracks?.compactMap { $0 } ?? []
-                    let indexedTracks = Array(savedTracks.enumerated())
-                    
-                    ForEach(indexedTracks, id: \.offset) { index, track in
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(tracks.enumerated()), id: \.offset) { index, track in
                         MenuItemView(
                             menu: Menu(id: index, name: track.title, next: selectedIndex == index),
                             isSelected: selectedIndex == index
@@ -67,42 +78,37 @@ struct SongListView: View {
                 .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
                     guard iPlayrController.activePage == .coverFlowSongList else { return }
                     selectedIndex = newIndex
-                    scrollViewProxy.scrollTo(newIndex)
+                    proxy.scrollTo(newIndex)
                 }
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        scrollViewProxy.scrollTo(selectedIndex)
+                        proxy.scrollTo(selectedIndex)
                     }
                 }
             }
+            .padding(.bottom, 26)
         }
     }
-    
-    private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .coverFlowSongList
-        setupButtonListener()
+
+    private func loadTracks() {
+        Task {
+            await albumManager.getAlbumTracks(id: album.id.rawValue)
+            await updateControllerIfNeeded()
+            await MainActor.run { isLoading = false }
+        }
     }
-    
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .coverFlowSongList else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    withAnimation(.linear(duration: 0.2)) {
-                        isFaceUp = false
-                    }
-                case .select: break
-                default: break
-                }
-            }
-            .store(in: &cancellables)
+
+    private func updateControllerIfNeeded() async {
+        await MainActor.run {
+            guard iPlayrController.activePage == .coverFlowSongList else { return }
+            iPlayrController.menuCount = tracks.count
+        }
     }
-    
-    private func cancelSubscriptions() {
+
+    private func cleanup() {
         isLoading = true
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
     }
 }
+

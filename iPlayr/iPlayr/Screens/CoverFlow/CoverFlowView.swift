@@ -11,58 +11,22 @@ struct CoverFlowView: View {
     @State private var albums: MusicItemCollection<Album> = []
     @State private var selectedTrack: Album?
     @State private var selectedIndex = 0
-    @State private var selectedTrackIndex: Int = 0
+    @State private var selectedTrackIndex = 0
     @State private var viewState: ViewState = .loading
     @State private var isPlayerView = false
-    @State private var isSongList: Bool = false
+    @State private var isSongList = false
 
     var body: some View {
         VStack(spacing: 0) {
             StatusBar(title: isPlayerView ? "Now Playing" : "CoverFlow")
+
             ZStack {
                 if viewState == .content {
-                    if !isPlayerView {
-                        VStack {
-                            CarouselViewControllerWrapper(
-                                dataSource: $albums,
-                                selectedIndex: $selectedIndex,
-                                isSongList: $isSongList
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: 200)
-                            Spacer()
-                                .frame(height: 35)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .zIndex(isSongList ? 2 : 0)
-
-                        if !albums.isEmpty {
-                            VStack(spacing: 2) {
-                                Spacer()
-                                Text(albums[selectedIndex].title)
-                                    .font(.system(size: 16, weight: .bold))
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(.black)
-                                    .lineLimit(2)
-                                Text(albums[selectedIndex].artistName)
-                                    .font(.system(size: 16, weight: .bold))
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(.black)
-                                    .lineLimit(1)
-                            }
-                            .padding(.horizontal, 16)
-                            .zIndex(1)
-                        }
-                    }
+                    contentView
                 }
 
                 if isPlayerView {
-                    PlayerView(
-                        id: albumManager.savedAlbums?[selectedIndex].id.rawValue ?? "",
-                        trackIndex: selectedTrackIndex,
-                        isFromCoverFlow: true, isFromPlaylist: false
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .zIndex(2)
+                    playerView
                 }
 
                 StateView(state: viewState)
@@ -70,155 +34,193 @@ struct CoverFlowView: View {
             .padding(.vertical, 16)
             .frame(maxHeight: .infinity)
             .background(Color.white)
-            .navigationBarBackButtonHidden()
-            .task { await loadAlbums() }
-            .onAppear(perform: setup)
-            .onDisappear(perform: cancelSubscriptions)
-            .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
-                guard iPlayrController.activePage == .coverFlow else { return }
-                selectedIndex = newIndex
+        }
+        .navigationBarBackButtonHidden()
+        .task { await loadAlbums() }
+        .onAppear(perform: setup)
+        .onDisappear(perform: cleanup)
+        .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
+            guard iPlayrController.activePage == .coverFlow else { return }
+            selectedIndex = newIndex
+        }
+    }
+
+    @ViewBuilder
+    private var contentView: some View {
+        if !isPlayerView {
+            VStack {
+                CarouselWrapper(
+                    albums: $albums,
+                    selectedIndex: $selectedIndex,
+                    isSongList: $isSongList
+                )
+                .frame(maxWidth: .infinity, maxHeight: 200)
+
+                Spacer().frame(height: 35)
             }
-            .onChange(of: isSongList) { oldValue, newValue in
-                if oldValue, !newValue {
-                    resetup()
-                }
+            .zIndex(isSongList ? 2 : 0)
+
+            if !albums.isEmpty {
+                albumInfo
             }
         }
+    }
+
+    @ViewBuilder
+    private var albumInfo: some View {
+        VStack(spacing: 2) {
+            Spacer()
+
+            Text(albums[selectedIndex].title)
+                .font(.system(size: 16, weight: .bold))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.black)
+                .lineLimit(2)
+
+            Text(albums[selectedIndex].artistName)
+                .font(.system(size: 16, weight: .bold))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.black)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 16)
+        .zIndex(1)
+    }
+
+    private var playerView: some View {
+        PlayerView(
+            id: albumManager.savedAlbums?[selectedIndex].id.rawValue ?? "",
+            trackIndex: selectedTrackIndex,
+            isFromCoverFlow: true,
+            isFromPlaylist: false
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .zIndex(2)
     }
 
     private func loadAlbums() async {
         viewState = .loading
         await albumManager.getCurrentUserSavedAlbums()
 
-        if let savedAlbums = albumManager.savedAlbums {
-            if savedAlbums.isEmpty {
-                viewState = .empty(message: "No albums found\nAdd some albums to your library")
-            } else {
-                albums = savedAlbums
-                iPlayrController.menuCount = albums.count
-                viewState = .content
-            }
-        } else {
+        guard let savedAlbums = albumManager.savedAlbums else {
             viewState = .error(message: albumManager.errorMessage ?? "An error occurred\nPlease try again")
+            return
+        }
+
+        if savedAlbums.isEmpty {
+            viewState = .empty(message: "No albums found\nAdd some albums to your library")
+        } else {
+            albums = savedAlbums
+            iPlayrController.menuCount = albums.count
+            viewState = .content
         }
     }
-}
 
-extension CoverFlowView {
     private func setup() {
-        iPlayrController.activePage = .coverFlow
-        iPlayrController.menuCount = albums.count
-        iPlayrController.selectedIndex = selectedIndex
+        configureController()
         setupButtonListener()
     }
 
-    private func resetup() {
+    private func configureController() {
         iPlayrController.activePage = .coverFlow
         iPlayrController.menuCount = albums.count
         iPlayrController.selectedIndex = selectedIndex
     }
 
     private func setupButtonListener() {
-        guard iPlayrController.activePage == .coverFlow, !isSongList, !isPlayerView else { return }
         iPlayrController.buttonPressed
             .sink { action in
-                switch action {
-                case .menu:
-                    if isSongList {
-                        withAnimation(.spring(duration: 0.2)) {
-                            isSongList = false
-                        }
-                    } else if isPlayerView {
-                        isPlayerView = false
-                    } else {
-                        dismiss()
-                    }
-                case .select:
-                    if isSongList && (iPlayrController.activePage == .coverFlow || iPlayrController.activePage == .coverFlowSongList) {
-                        selectedTrackIndex = iPlayrController.selectedIndex
-                        selectedTrack = albums[selectedIndex]
-                        isPlayerView = true
-                    } else {
-                        isSongList = true
-                    }
-                default: break
-                }
+                handleButtonAction(action)
             }
             .store(in: &cancellables)
     }
 
-    private func cancelSubscriptions() {
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu:
+            handleMenuAction()
+        case .select:
+            handleSelectAction()
+        default:
+            break
+        }
+    }
+
+    private func handleMenuAction() {
+        if isPlayerView {
+            resetToMain()
+        } else if isSongList {
+            resetToCarousel()
+        } else {
+            dismiss()
+        }
+    }
+
+    private func handleSelectAction() {
+        if isSongList && iPlayrController.activePage == .coverFlowSongList {
+            showPlayer()
+        } else if !isSongList && !isPlayerView {
+            showSongList()
+        }
+    }
+
+    private func resetToMain() {
+        isPlayerView = false
+        isSongList = false
+        selectedTrack = nil
+        selectedTrackIndex = 0
+        configureController()
+    }
+
+    private func resetToCarousel() {
+        isSongList = false
+        configureController()
+    }
+
+    private func showPlayer() {
+        selectedTrack = albums[selectedIndex]
+        isPlayerView = true
+    }
+
+    private func showSongList() {
+        isSongList = true
+        iPlayrController.activePage = .coverFlowSongList
+        iPlayrController.selectedIndex = 0
+    }
+
+    private func cleanup() {
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
     }
 }
 
-struct CarouselViewControllerWrapper: UIViewControllerRepresentable {
-    @Binding var dataSource: MusicItemCollection<Album>
+struct CarouselWrapper: UIViewControllerRepresentable {
+    @Binding var albums: MusicItemCollection<Album>
     @Binding var selectedIndex: Int
     @Binding var isSongList: Bool
 
     func makeUIViewController(context: Context) -> CarouselViewController {
-        let viewController = CarouselViewController(isSongList: $isSongList, selectedIndex: $selectedIndex)
-        viewController.dataSource = dataSource
-        return viewController
+        CarouselViewController(
+            albums: albums,
+            isSongList: $isSongList,
+            selectedIndex: $selectedIndex
+        )
     }
 
     func updateUIViewController(_ uiViewController: CarouselViewController, context: Context) {
-        if uiViewController.dataSource != dataSource {
-            uiViewController.dataSource = dataSource
-            uiViewController.carousel.reloadData()
-        }
-
-        let currentOffset = uiViewController.carousel.scrollOffset
-        let targetOffset = CGFloat(selectedIndex)
-
-        if abs(currentOffset - targetOffset) > 0.01 {
-            uiViewController.carousel.layer.removeAllAnimations()
-
-            let distance = abs(targetOffset - currentOffset)
-            let (duration, animationOptions) = calculateAnimationParams(for: distance)
-
-            if duration > 0 {
-                UIView.animate(withDuration: duration, delay: 0, options: animationOptions, animations: {
-                    uiViewController.carousel.scrollOffset = targetOffset
-                }, completion: { finished in
-                    if finished && abs(uiViewController.carousel.scrollOffset - targetOffset) < 0.1 {
-                        Task {
-                            await MainActor.run {
-                                uiViewController.carousel.reloadData()
-                            }
-                        }
-                    }
-                })
-            } else {
-                uiViewController.carousel.scrollOffset = targetOffset
-                Task {
-                    await MainActor.run {
-                        uiViewController.carousel.reloadData()
-                    }
-                }
-            }
-        }
-    }
-
-    private func calculateAnimationParams(for distance: CGFloat) -> (TimeInterval, UIView.AnimationOptions) {
-        switch distance {
-        case 0...1: return (0.2, [.curveEaseInOut, .allowUserInteraction])
-        case 1...3: return (0.10, [.curveEaseOut, .allowUserInteraction])
-        case 3...5: return (0.05, [.curveEaseOut, .allowUserInteraction])
-        default: return (0, [])
-        }
+        uiViewController.updateData(albums)
+        uiViewController.animateToIndex(selectedIndex)
     }
 }
 
 final class CarouselViewController: UIViewController {
-    var dataSource: MusicItemCollection<Album> = []
-    var carousel: iCarousel!
-    private var isSongList: Binding<Bool>
-    private var selectedIndex: Binding<Int>
+    private var albums: MusicItemCollection<Album>
+    private var carousel: iCarousel!
+    private let isSongList: Binding<Bool>
+    private let selectedIndex: Binding<Int>
 
-    init(isSongList: Binding<Bool>, selectedIndex: Binding<Int>) {
+    init(albums: MusicItemCollection<Album>, isSongList: Binding<Bool>, selectedIndex: Binding<Int>) {
+        self.albums = albums
         self.isSongList = isSongList
         self.selectedIndex = selectedIndex
         super.init(nibName: nil, bundle: nil)
@@ -230,24 +232,29 @@ final class CarouselViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupCarousel()
+        setupLayout()
+    }
+
+    private func setupCarousel() {
         carousel = iCarousel()
-        carousel.translatesAutoresizingMaskIntoConstraints = false
         carousel.animator = iCarousel.Animator.CoverFlow(isCoverFlow2: false)
             .wrapEnabled(false)
             .offsetMultiplier(1)
             .spacing(0.2)
+
         carousel.isScrollEnabled = false
         carousel.isPagingEnabled = true
         carousel.decelerationRate = 0.7
-        carousel.delegate = self
         carousel.itemWidth = 160
+        carousel.delegate = self
         carousel.dataSource = self
-        setup()
     }
 
-    private func setup() {
+    private func setupLayout() {
         view.addSubview(carousel)
         carousel.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
             carousel.topAnchor.constraint(equalTo: view.topAnchor),
             carousel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -255,18 +262,60 @@ final class CarouselViewController: UIViewController {
             carousel.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
+
+    func updateData(_ newAlbums: MusicItemCollection<Album>) {
+        guard albums != newAlbums else { return }
+        albums = newAlbums
+        carousel.reloadData()
+    }
+
+    func animateToIndex(_ index: Int) {
+        let targetOffset = CGFloat(index)
+        let currentOffset = carousel.scrollOffset
+
+        guard abs(currentOffset - targetOffset) > 0.01 else { return }
+
+        carousel.layer.removeAllAnimations()
+        let distance = abs(targetOffset - currentOffset)
+        let (duration, options) = animationParameters(for: distance)
+
+        if duration > 0 {
+            UIView.animate(withDuration: duration, delay: 0, options: options) {
+                self.carousel.scrollOffset = targetOffset
+            } completion: { finished in
+                if finished { self.carousel.reloadData() }
+            }
+        } else {
+            carousel.scrollOffset = targetOffset
+            carousel.reloadData()
+        }
+    }
+
+    private func animationParameters(for distance: CGFloat) -> (TimeInterval, UIView.AnimationOptions) {
+        switch distance {
+        case 0...1: return (0.2, [.curveEaseInOut, .allowUserInteraction])
+        case 1...3: return (0.10, [.curveEaseOut, .allowUserInteraction])
+        case 3...5: return (0.05, [.curveEaseOut, .allowUserInteraction])
+        default: return (0, [])
+        }
+    }
 }
 
 extension CarouselViewController: iCarouselDelegate, @preconcurrency iCarouselDataSource {
-    func numberOfItems(in carousel: iCarousel) -> Int { dataSource.count }
+    func numberOfItems(in carousel: iCarousel) -> Int {
+        albums.count
+    }
 
     func carousel(_ carousel: iCarousel, viewForItemAt index: Int, reusingView: UIView?) -> UIView {
-        let album = dataSource[index]
+        let album = albums[index]
+        let isSelected = album.id == albums[selectedIndex.wrappedValue].id
+
         let albumCoverView = AlbumCover(
             album: album,
-            isSongList: isSongList,
-            isSelected: album.id == dataSource[selectedIndex.wrappedValue].id
+            isSelected: isSelected,
+            isSongList: isSongList
         )
+
         let hostingController = UIHostingController(rootView: albumCoverView)
         hostingController.view.frame = CGRect(x: 0, y: 0, width: 160, height: 160)
         hostingController.view.backgroundColor = .clear
@@ -276,52 +325,22 @@ extension CarouselViewController: iCarouselDelegate, @preconcurrency iCarouselDa
 
 struct AlbumCover: View {
     let album: Album
-    @State var isFaceUp: Bool = false
+    let isSelected: Bool
     @Binding var isSongList: Bool
-    var isSelected: Bool
+    @State private var isFaceUp = false
 
     var body: some View {
-        GeometryReader { cardGeometry in
+        GeometryReader { geometry in
             ZStack {
-                if let artwork = album.artwork {
-                    ArtworkImage(artwork, width: 160, height: 160)
-                        .modifier(FlipOpacity(pct: isFaceUp ? 0 : 1))
-                        .aspectRatio(contentMode: .fit)
-                        .rotation3DEffect(Angle.degrees(isFaceUp ? 180 : 360), axis: (0,1,0))
-                        .reflection()
-                } else {
-                    Image(ImageNames.Custom.coverPlaceholder)
-                        .resizable()
-                        .frame(width: 160, height: 160)
-                        .modifier(FlipOpacity(pct: isFaceUp ? 0 : 1))
-                        .aspectRatio(contentMode: .fit)
-                        .rotation3DEffect(Angle.degrees(isFaceUp ? 180 : 360), axis: (0,1,0))
-                        .reflection()
-                }
-
-                if isFaceUp {
-                    SongListView(album: album, isFaceUp: $isFaceUp)
-                    .frame(width: 300, height: 280)
-                    .background(Color.white)
-                    .zIndex(2)
-                    .border(.gray)
-                    .offset(y: 40)
-                    .modifier(FlipOpacity(pct: isFaceUp ? 1 : 0))
-                    .rotation3DEffect(Angle.degrees(isFaceUp ? 0 : 180), axis: (0,1,0))
-                    .scaleEffect(isFaceUp ? 1 : 160 / 300)
-                    .onAppear { isSongList = true }
-                    .onDisappear { isSongList = false }
-                }
+                albumArtwork
+                songListOverlay
             }
             .frame(width: isFaceUp ? 300 : 160, height: isFaceUp ? 300 : 160)
-            .position(x: cardGeometry.size.width/2,
-                     y: cardGeometry.size.height/2)
+            .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
             .onChange(of: isSongList) { _, newValue in
-                if !newValue { resetState() } else {
-                    if isSelected {
-                        withAnimation(.linear(duration: 0.2)) {
-                            isFaceUp.toggle()
-                        }
+                if isSelected {
+                    withAnimation(.linear(duration: 0.3)) {
+                        isFaceUp = newValue
                     }
                 }
             }
@@ -330,7 +349,32 @@ struct AlbumCover: View {
         .zIndex(isFaceUp ? 1000 : 0)
     }
 
-    private func resetState() {
-        isFaceUp = false
+    @ViewBuilder
+    private var albumArtwork: some View {
+        Group {
+            if let artwork = album.artwork {
+                ArtworkImage(artwork, width: 160, height: 160)
+            } else {
+                Image(ImageNames.Custom.coverPlaceholder)
+                    .resizable()
+                    .frame(width: 160, height: 160)
+            }
+        }
+        .modifier(FlipOpacity(pct: isFaceUp ? 0 : 1))
+        .aspectRatio(contentMode: .fit)
+        .rotation3DEffect(.degrees(isFaceUp ? 180 : 360), axis: (0, 1, 0))
+        .reflection()
+    }
+
+    private var songListOverlay: some View {
+        SongListView(album: album, isSelected: isSelected, isSongList: $isSongList)
+            .frame(width: 300, height: 280)
+            .background(Color.white)
+            .border(.gray)
+            .offset(y: 40)
+            .modifier(FlipOpacity(pct: isFaceUp ? 1 : 0))
+            .rotation3DEffect(.degrees(isFaceUp ? 0 : 180), axis: (0, 1, 0))
+            .scaleEffect(isFaceUp ? 1 : 160 / 300)
+            .zIndex(2)
     }
 }

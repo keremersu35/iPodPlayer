@@ -53,9 +53,11 @@ struct iPlayrScreen: View {
     }
 
     private func handleNavigation(_ navType: NavigationType) async {
-        switch navType {
-        case .push(let route):
-            routes.append(route)
+        DispatchQueue.main.async {
+            switch navType {
+            case .push(let route):
+                routes.append(route)
+            }
         }
     }
 }
