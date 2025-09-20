@@ -2,6 +2,7 @@ import Combine
 import SwiftUI
 import MusicKit
 
+@MainActor
 final class PlaylistManager: ObservableObject {
     @Published var playlists: MusicItemCollection<Playlist>?
     @Published var playlistsCount: Int = 0
@@ -16,10 +17,8 @@ final class PlaylistManager: ObservableObject {
     func fetchPlaylists() async {
         do {
             let playlists = try await playlistRepository.currentUserPlaylist()
-            await MainActor.run {
-                self.playlists = playlists ?? []
-                self.playlistsCount = playlists?.count ?? 0
-            }
+            self.playlists = playlists ?? []
+            self.playlistsCount = playlists?.count ?? 0
         } catch {
             errorMessage = "Request failed with error: \(error.localizedDescription)"
         }
@@ -28,9 +27,7 @@ final class PlaylistManager: ObservableObject {
     func getPlaylistTracks(_ id: String) async {
         do {
             let tracks = try await playlistRepository.getPlaylistTracks(id: id)
-            await MainActor.run {
-                self.tracks = tracks
-            }
+            self.tracks = tracks
         } catch {
             errorMessage = "Request failed with error: \(error.localizedDescription)"
         }

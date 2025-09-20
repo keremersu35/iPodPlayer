@@ -10,6 +10,7 @@ enum Pages {
          coverFlowSongList, player, theme, settings, albums
 }
 
+@MainActor
 final class iPlayrButtonController: ObservableObject {
     @Published var selectedIndex: Int = 0
     @Published var menuCount: Int = 0

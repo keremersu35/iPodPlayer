@@ -175,6 +175,8 @@ public final class iCarousel: UIView {
             stopAnimation()
         }
     }
+    
+    @MainActor
     deinit {
         stopAnimation()
     }

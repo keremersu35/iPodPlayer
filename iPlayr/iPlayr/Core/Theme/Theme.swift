@@ -42,28 +42,26 @@ struct ThemeFactory {
     }
 }
 
+@MainActor
 final class ThemeManager: ObservableObject {
     @Published private(set) var currentTheme: Theme
-    private(set) var currentThemeType: ThemeType
-    
+    @AppStorage("currentTheme") private var currentThemeType: ThemeType = .silver
+
     init() {
-        currentThemeType = .silver
-        currentTheme = ThemeFactory.createTheme(for: currentThemeType)
-        loadTheme()
+        // Önce default theme ile initialize et
+        self.currentTheme = ThemeFactory.createTheme(for: .silver)
+
+        // Sonra stored theme'e göre güncelle
+        self.currentTheme = ThemeFactory.createTheme(for: currentThemeType)
     }
-    
-    private func loadTheme() {
-        if let savedTheme = UserDefaults.standard.string(forKey: UserDefaultsKeys.currentTheme.rawValue),
-           let themeType = ThemeType(rawValue: savedTheme) {
-            currentThemeType = themeType
-            currentTheme = ThemeFactory.createTheme(for: themeType)
-        }
-    }
-    
+
     func setTheme(_ themeType: ThemeType) {
         currentThemeType = themeType
         currentTheme = ThemeFactory.createTheme(for: themeType)
-        UserDefaults.standard.set(themeType.rawValue, forKey: UserDefaultsKeys.currentTheme.rawValue)
+    }
+
+    var themeType: ThemeType {
+        currentThemeType
     }
 }
 

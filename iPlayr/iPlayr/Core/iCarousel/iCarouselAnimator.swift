@@ -1,6 +1,7 @@
 import UIKit
 
 extension iCarousel {
+    @MainActor
     open class Animator {
         open var fadeMin: CGFloat = -.infinity
         open var fadeMax: CGFloat = .infinity

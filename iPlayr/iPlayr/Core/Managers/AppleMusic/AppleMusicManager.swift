@@ -11,7 +11,7 @@ final class AppleMusicManager: ObservableObject {
     @Published private(set) var isLast: Bool = false
     @Published private(set) var isFirst: Bool = false
     
-    private let musicPlayer = ApplicationMusicPlayer.shared
+    private nonisolated(unsafe) let musicPlayer = ApplicationMusicPlayer.shared
     private var cancellables = Set<AnyCancellable>()
     
     init() {

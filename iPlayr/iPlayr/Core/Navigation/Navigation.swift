@@ -21,7 +21,7 @@ struct NavigateAction {
 }
 
 struct NavigationEnvironmentKey: EnvironmentKey {
-    static var defaultValue: NavigateAction = NavigateAction(action: { _ in })
+    nonisolated(unsafe) static var defaultValue: NavigateAction = NavigateAction(action: { _ in })
 }
 
 extension EnvironmentValues {
@@ -48,8 +48,8 @@ enum Route: Hashable, Identifiable {
 }
 
 extension Route {
-    
-    @ViewBuilder
+
+    @MainActor @ViewBuilder
     var destination: some View {
         switch self {
         case .music:

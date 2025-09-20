@@ -1,6 +1,7 @@
 import Combine
 import MusicKit
 
+@MainActor
 final class AlbumManager: ObservableObject {
     @Published var savedAlbums: MusicItemCollection<Album>?
     @Published var savedAlbumsTracks: MusicItemCollection<Track>?

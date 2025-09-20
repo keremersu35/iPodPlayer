@@ -257,7 +257,7 @@ final class CarouselViewController: UIViewController {
     }
 }
 
-extension CarouselViewController: iCarouselDelegate, iCarouselDataSource {
+extension CarouselViewController: iCarouselDelegate, @preconcurrency iCarouselDataSource {
     func numberOfItems(in carousel: iCarousel) -> Int { dataSource.count }
 
     func carousel(_ carousel: iCarousel, viewForItemAt index: Int, reusingView: UIView?) -> UIView {
