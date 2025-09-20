@@ -26,7 +26,14 @@ struct CoverFlowView: View {
                 }
 
                 if isPlayerView {
-                    playerView
+                    PlayerView(
+                        id: albumManager.savedAlbums?[selectedIndex].id.rawValue ?? "",
+                        trackIndex: selectedTrackIndex,
+                        isFromCoverFlow: true,
+                        isFromPlaylist: false
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .zIndex(2)
                 }
 
                 StateView(state: viewState)
@@ -85,17 +92,6 @@ struct CoverFlowView: View {
         }
         .padding(.horizontal, 16)
         .zIndex(1)
-    }
-
-    private var playerView: some View {
-        PlayerView(
-            id: albumManager.savedAlbums?[selectedIndex].id.rawValue ?? "",
-            trackIndex: selectedTrackIndex,
-            isFromCoverFlow: true,
-            isFromPlaylist: false
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .zIndex(2)
     }
 
     private func loadAlbums() async {

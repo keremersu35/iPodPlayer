@@ -1,5 +1,5 @@
 import SwiftUI
-import _MusicKit_SwiftUI
+import MusicKit
 import Combine
 
 struct PlayerView: View {
