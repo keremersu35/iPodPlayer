@@ -73,6 +73,7 @@ struct CoverFlowView: View {
             .navigationBarBackButtonHidden()
             .task { await loadAlbums() }
             .onAppear(perform: setup)
+            .onDisappear(perform: cancelSubscriptions)
             .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
                 guard iPlayrController.activePage == .coverFlow else { return }
                 selectedIndex = newIndex
@@ -105,7 +106,6 @@ struct CoverFlowView: View {
 
 extension CoverFlowView {
     private func setup() {
-        iPlayrController.hasRightView = false
         iPlayrController.activePage = .coverFlow
         iPlayrController.menuCount = albums.count
         iPlayrController.selectedIndex = selectedIndex

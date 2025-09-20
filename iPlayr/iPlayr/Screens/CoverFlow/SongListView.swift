@@ -82,7 +82,6 @@ struct SongListView: View {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .coverFlowSongList
         setupButtonListener()
-        iPlayrController.hasRightView = false
     }
     
     private func setupButtonListener() {

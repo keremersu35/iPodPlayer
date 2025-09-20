@@ -48,10 +48,7 @@ final class ThemeManager: ObservableObject {
     @AppStorage("currentTheme") private var currentThemeType: ThemeType = .silver
 
     init() {
-        // Önce default theme ile initialize et
         self.currentTheme = ThemeFactory.createTheme(for: .silver)
-
-        // Sonra stored theme'e göre güncelle
         self.currentTheme = ThemeFactory.createTheme(for: currentThemeType)
     }
 
@@ -59,9 +56,4 @@ final class ThemeManager: ObservableObject {
         currentThemeType = themeType
         currentTheme = ThemeFactory.createTheme(for: themeType)
     }
-
-    var themeType: ThemeType {
-        currentThemeType
-    }
 }
-

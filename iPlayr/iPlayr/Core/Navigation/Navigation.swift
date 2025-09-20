@@ -3,8 +3,6 @@ import SwiftUI
 
 enum NavigationType: Hashable {
     case push(Route)
-    case unwind(Route)
-    case resetTo(Route)
 }
 
 struct NavigateAction {
@@ -13,10 +11,6 @@ struct NavigateAction {
     
     func callAsFunction(_ navigationType: NavigationType) {
         action(navigationType)
-    }
-
-    func resetToRoot(_ route: Route) {
-        action(.resetTo(route))
     }
 }
 

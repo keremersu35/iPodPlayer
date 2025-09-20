@@ -35,41 +35,4 @@ extension iCarousel {
     func dequeuePlaceholderView() -> UIView? {
         placeholderViewPool.popFirst()
     }
-
-    func clearViewPools() {
-        itemViewPool.removeAll()
-        placeholderViewPool.removeAll()
-    }
-
-    var pooledItemCount: Int {
-        itemViewPool.count
-    }
-
-    var pooledPlaceholderCount: Int {
-        placeholderViewPool.count
-    }
-}
-
-extension iCarousel {
-    func preloadViews(count: Int = 5) {
-        guard count > 0 else { return }
-
-        for _ in 0..<count {
-            if let view = dataSource?.carousel(self, viewForItemAt: 0, reusingView: nil) {
-                queue(itemView: view)
-            }
-        }
-    }
-
-    func optimizeMemoryUsage() {
-        let maxPoolSize = max(numberOfVisibleItems * 2, 10)
-
-        while itemViewPool.count > maxPoolSize {
-            _ = itemViewPool.popFirst()
-        }
-
-        while placeholderViewPool.count > maxPoolSize {
-            _ = placeholderViewPool.popFirst()
-        }
-    }
 }

@@ -78,7 +78,6 @@ struct AlbumTracksView: View {
     private func setup() {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .albumTracks
-        iPlayrController.hasRightView = false
         setupButtonListener()
     }
     

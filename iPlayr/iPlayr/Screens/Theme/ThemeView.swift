@@ -34,8 +34,6 @@ struct ThemeView: View {
     private func setup() {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .theme
-        iPlayrController.hasRightView = true
-        iPlayrController.menuCount = menus.count
         setupButtonListener()
     }
     

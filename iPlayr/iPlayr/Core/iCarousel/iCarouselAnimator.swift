@@ -58,10 +58,6 @@ extension iCarousel {
             true
         }
 
-        open func circularCarouselItemCount(in carousel: iCarousel) -> Int {
-            totalItemCount(in: carousel)
-        }
-
         final func _numberOfVisibleItems(in carousel: iCarousel) -> Int {
             let requestedCount = numberOfVisibleItems(in: carousel)
             let availableCount = totalItemCount(in: carousel)
@@ -70,15 +66,6 @@ extension iCarousel {
 
         open func numberOfVisibleItems(in carousel: iCarousel) -> Int {
             Constants.maxVisibleItems
-        }
-    }
-
-    open class CanBeInvertedAnimator: Animator {
-        let inverted: Bool
-
-        init(inverted: Bool = false) {
-            self.inverted = inverted
-            super.init()
         }
     }
 }
@@ -91,110 +78,9 @@ extension iCarousel.Animator {
     func totalItemCount(in carousel: iCarousel) -> Int {
         carousel.numberOfItems + carousel.state.numberOfPlaceholdersToShow
     }
-
-    func circularVisibleItemCount(in carousel: iCarousel) -> Int {
-        let carouselWidth = carousel.relativeWidth
-        let itemWidth = itemWidthWithSpacing(in: carousel)
-
-        guard itemWidth > 0 else { return 0 }
-
-        let calculatedCount = Int(ceil(carouselWidth / itemWidth) * CGFloat.pi)
-        let constrainedCount = min(iCarousel.Constants.maxVisibleItems, max(12, calculatedCount))
-
-        return min(totalItemCount(in: carousel), constrainedCount)
-    }
 }
 
 extension iCarousel.Animator {
-    open class Linear: iCarousel.Animator {
-        open override func transformForItemView(with offset: CGFloat, in carousel: iCarousel) -> CATransform3D {
-            let baseTransform = super.transformForItemView(with: offset, in: carousel)
-            let translation = calculateLinearTranslation(offset: offset, carousel: carousel)
-
-            return applyLinearTranslation(baseTransform, translation: translation, carousel: carousel)
-        }
-
-        private func calculateLinearTranslation(offset: CGFloat, carousel: iCarousel) -> CGFloat {
-            offset * itemWidthWithSpacing(in: carousel)
-        }
-
-        private func applyLinearTranslation(_ transform: CATransform3D, translation: CGFloat, carousel: iCarousel) -> CATransform3D {
-            if carousel.isVertical {
-                return CATransform3DTranslate(transform, 0.0, translation, 0.0)
-            } else {
-                return CATransform3DTranslate(transform, translation, 0.0, 0.0)
-            }
-        }
-
-        open override func numberOfVisibleItems(in carousel: iCarousel) -> Int {
-            let carouselWidth = carousel.relativeWidth
-            let itemWidth = itemWidthWithSpacing(in: carousel)
-
-            guard itemWidth > 0 else { return 0 }
-
-            let calculatedCount = Int(ceil(carouselWidth / itemWidth)) + 2
-            return min(iCarousel.Constants.maxVisibleItems, calculatedCount)
-        }
-    }
-
-    open class Rotary: iCarousel.CanBeInvertedAnimator {
-        open override func configInit() {
-            super.configInit()
-            isWrapEnabled = true
-        }
-
-        open override func circularCarouselItemCount(in carousel: iCarousel) -> Int {
-            circularVisibleItemCount(in: carousel)
-        }
-
-        open override func transformForItemView(with offset: CGFloat, in carousel: iCarousel) -> CATransform3D {
-            let baseTransform = super.transformForItemView(with: offset, in: carousel)
-            let rotaryParams = calculateRotaryParameters(offset: offset, carousel: carousel)
-
-            return applyRotaryTransform(baseTransform, params: rotaryParams, carousel: carousel)
-        }
-
-        private func calculateRotaryParameters(offset: CGFloat, carousel: iCarousel) -> RotaryParams {
-            let itemCount = CGFloat(circularCarouselItemCount(in: carousel))
-            let baseRadius = max(
-                itemWidthWithSpacing(in: carousel) / 2,
-                itemWidthWithSpacing(in: carousel) / 2 / tan(arc / 2.0 / itemCount)
-            )
-
-            var radius = baseRadius
-            var angle = offset * arc / itemCount
-
-            if inverted {
-                radius = -radius
-                angle = -angle
-            }
-
-            return RotaryParams(radius: radius, angle: angle)
-        }
-
-        private struct RotaryParams {
-            let radius: CGFloat
-            let angle: CGFloat
-        }
-
-        private func applyRotaryTransform(_ transform: CATransform3D, params: RotaryParams, carousel: iCarousel) -> CATransform3D {
-            let x = params.radius * sin(params.angle)
-            let z = params.radius * cos(params.angle) - params.radius
-
-            if carousel.isVertical {
-                return CATransform3DTranslate(transform, 0.0, x, z)
-            } else {
-                return CATransform3DTranslate(transform, x, 0.0, z)
-            }
-        }
-
-        open override func numberOfVisibleItems(in carousel: iCarousel) -> Int {
-            let circularCount = circularCarouselItemCount(in: carousel)
-            let visibleCount = inverted ? circularCount / 2 : circularCount
-
-            return min(iCarousel.Constants.maxVisibleItems, visibleCount)
-        }
-    }
 
     open class CoverFlow: iCarousel.Animator {
         open var tilt: CGFloat = 0.9
@@ -297,58 +183,6 @@ extension iCarousel.Animator {
             let calculatedCount = Int(ceil(carouselWidth / itemWidth)) + 2
 
             return min(iCarousel.Constants.maxVisibleItems, calculatedCount)
-        }
-    }
-
-    open class TimeMachine: iCarousel.CanBeInvertedAnimator {
-        open var tilt: CGFloat = 0.3
-
-        open override func configInit() {
-            super.configInit()
-            configureFadeSettings()
-        }
-
-        private func configureFadeSettings() {
-            if inverted {
-                fadeMin = 0.0
-            } else {
-                fadeMax = 0.0
-            }
-        }
-
-        open override func transformForItemView(with offset: CGFloat, in carousel: iCarousel) -> CATransform3D {
-            let baseTransform = super.transformForItemView(with: offset, in: carousel)
-            let timeMachineParams = calculateTimeMachineParameters(offset: offset, carousel: carousel)
-
-            return applyTimeMachineTransform(baseTransform, params: timeMachineParams, carousel: carousel)
-        }
-
-        private func calculateTimeMachineParameters(offset: CGFloat, carousel: iCarousel) -> TimeMachineParams {
-            var adjustedTilt = tilt
-            var adjustedOffset = offset
-
-            if inverted {
-                adjustedTilt = -tilt
-                adjustedOffset = -offset
-            }
-
-            let t1 = adjustedOffset * carousel.itemWidth * adjustedTilt
-            let t2 = adjustedOffset * itemWidthWithSpacing(in: carousel)
-
-            return TimeMachineParams(t1: t1, t2: t2)
-        }
-
-        private struct TimeMachineParams {
-            let t1: CGFloat
-            let t2: CGFloat
-        }
-
-        private func applyTimeMachineTransform(_ transform: CATransform3D, params: TimeMachineParams, carousel: iCarousel) -> CATransform3D {
-            if carousel.isVertical {
-                return CATransform3DTranslate(transform, 0.0, params.t1, params.t2)
-            } else {
-                return CATransform3DTranslate(transform, params.t1, 0.0, params.t2)
-            }
         }
     }
 }

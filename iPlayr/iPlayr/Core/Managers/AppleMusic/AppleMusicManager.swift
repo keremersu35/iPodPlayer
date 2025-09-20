@@ -18,17 +18,6 @@ final class AppleMusicManager: ObservableObject {
         setupSongObserver()
     }
 
-    func play() async throws {
-        guard let _ = currentTrack else {
-            throw MusicPlayerError.noTrackSelected
-        }
-        try await musicPlayer.play()
-    }
-
-    func pause() {
-        musicPlayer.pause()
-    }
-
     func playAlbum(id: String, fromIndex: Int = 0) async throws {
         currentTrack = nil
         let request = MusicLibraryRequest<Album>()

@@ -41,7 +41,6 @@ struct SignInView: View {
     private func setup() {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .login
-        iPlayrController.hasRightView = true
         iPlayrController.menuCount = menus.count
         setupButtonListener()
     }

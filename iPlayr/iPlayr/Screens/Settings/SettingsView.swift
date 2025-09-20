@@ -30,7 +30,6 @@ struct SettingsView: View {
     private func setup() {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .settings
-        iPlayrController.hasRightView = true
         iPlayrController.menuCount = menus.count
         setupButtonListener()
     }

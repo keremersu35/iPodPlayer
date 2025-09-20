@@ -73,7 +73,6 @@ struct PlaylistsView: View {
     private func setup() {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .playlists
-        iPlayrController.hasRightView = false
         setupButtonListener()
     }
     

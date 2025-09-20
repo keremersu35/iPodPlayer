@@ -80,7 +80,6 @@ struct AlbumsView: View {
     private func setup() {
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .albums
-        iPlayrController.hasRightView = false
         setupButtonListener()
     }
     

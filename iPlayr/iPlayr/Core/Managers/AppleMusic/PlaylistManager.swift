@@ -5,7 +5,6 @@ import MusicKit
 @MainActor
 final class PlaylistManager: ObservableObject {
     @Published var playlists: MusicItemCollection<Playlist>?
-    @Published var playlistsCount: Int = 0
     @Published var tracks: MusicItemCollection<Track>?
     @Published var errorMessage: String?
     private let playlistRepository: PlaylistRepositoryProtocol
@@ -18,7 +17,6 @@ final class PlaylistManager: ObservableObject {
         do {
             let playlists = try await playlistRepository.currentUserPlaylist()
             self.playlists = playlists ?? []
-            self.playlistsCount = playlists?.count ?? 0
         } catch {
             errorMessage = "Request failed with error: \(error.localizedDescription)"
         }

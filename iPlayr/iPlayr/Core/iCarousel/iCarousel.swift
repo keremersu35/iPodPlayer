@@ -53,7 +53,7 @@ public final class iCarousel: UIView {
         }
     }
 
-    var animator: iCarousel.Animator = .Linear() {
+    var animator: iCarousel.Animator = .CoverFlow() {
         didSet {
             if animator !== oldValue {
                 layOutItemViews()
@@ -181,6 +181,7 @@ public final class iCarousel: UIView {
         stopAnimation()
     }
 }
+
 extension iCarousel {
     func changeScrollOffset(_ newValue: CGFloat) {
         resetScrollingState()

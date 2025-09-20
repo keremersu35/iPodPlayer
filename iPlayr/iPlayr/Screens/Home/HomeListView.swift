@@ -41,7 +41,6 @@ struct HomeListView: View {
         iPlayrController.activePage = .home
         iPlayrController.menuCount = menus.count
         setupButtonListener()
-        iPlayrController.hasRightView = true
     }
     
     private func setupButtonListener() {

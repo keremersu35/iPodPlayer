@@ -9,6 +9,6 @@ struct FlipOpacity: @preconcurrency AnimatableModifier {
    }
 
    func body(content: Content) -> some View {
-      return content.opacity(Double(pct.rounded()))
+       content.opacity(Double(pct.rounded()))
    }
 }

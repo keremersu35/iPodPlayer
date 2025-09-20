@@ -57,6 +57,7 @@ struct MusicListView: View {
     private func navigation() {
         guard iPlayrController.activePage == .music else { return }
         let route: Route
+        iPlayrController.hasRightView = false
         switch selectedIndex {
         case 0: route = .coverFlow
         case 1: route = .playlists
