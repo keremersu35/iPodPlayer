@@ -1,8 +1,8 @@
 import UIKit
 
 protocol iCarouselDataSource: AnyObject {
-    func numberOfItems(in carousel: iCarousel) -> Int
-    func carousel(_ carousel: iCarousel, viewForItemAt index: Int, reusingView: UIView?) -> UIView
+    func numberOfItems() -> Int
+    func carousel(viewForItemAt index: Int) -> UIView
     func numberOfPlaceholders(in carousel: iCarousel) -> Int
     func carousel(_ carousel: iCarousel, placeholderViewAt index: Int, reusingView: UIView?) -> UIView?
 }

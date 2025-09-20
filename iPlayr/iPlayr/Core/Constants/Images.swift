@@ -11,7 +11,6 @@ struct ImageNames {
     }
     
     struct Custom {
-        static let appleMusic = "apple_music"
         static let coverPlaceholder = "cover_placeholder"
         static let play = "play"
         static let pause = "pause"

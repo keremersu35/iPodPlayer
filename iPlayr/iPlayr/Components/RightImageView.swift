@@ -1,31 +1,30 @@
 import SwiftUI
-import Combine
 import MusicKit
+import Combine
 
 struct RightImageView: View {
     @StateObject private var albumManager = AlbumManager()
     @State private var currentImageIndex = 0
-    @State private var nextImageIndex = 1
     @State private var timerCancellable: AnyCancellable?
-    @State private var opacity = 0.0
-    @State private var offset = -120.0
-    
-    private let transitionDuration: Double = 3
+    @State private var panDirection: PanDirection = .right
+
+    private let transitionDuration: Double = 2
     private let imageDuration: Double = 8
-    
+
     var body: some View {
         ZStack {
             Color.blue.opacity(0.3)
-            
+                .ignoresSafeArea()
+
             if MusicAuthorization.currentStatus != .authorized {
                 unauthorizedView
-            } else if let images = albumManager.savedAlbums?.compactMap({ $0.artwork }), !images.isEmpty {
-                artworkView(images)
+            } else if let images = albumManager.savedAlbums?.compactMap({ $0.artwork }),
+                      !images.isEmpty {
+                artworkSlideshow(images)
             } else {
                 noMusicView
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task { await albumManager.getCurrentUserSavedAlbums() }
         .onReceive(albumManager.$savedAlbums) { albums in
             guard !(albums?.isEmpty ?? true) else { return }
@@ -36,7 +35,7 @@ struct RightImageView: View {
 
     private var unauthorizedView: some View {
         VStack {
-            Image(ImageNames.Custom.appleMusic)
+            Image(systemName: "applelogo")
                 .resizable()
                 .frame(width: 60, height: 60)
             Spacer().frame(height: 16)
@@ -47,28 +46,22 @@ struct RightImageView: View {
         }
     }
 
-    private func artworkView(_ images: [Artwork]) -> some View {
+    private func artworkSlideshow(_ images: [Artwork]) -> some View {
         ZStack {
-            ArtworkImage(images[currentImageIndex], width: 300, height: 300)
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .offset(x: offset)
-                .clipped()
-                .onAppear {
-                    withAnimation(.linear(duration: imageDuration + 2)) {
-                        offset = -90
-                    }
-                }
-            
-            if images.count > 1 {
-                ArtworkImage(images[nextImageIndex], width: 300, height: 300)
-                    .aspectRatio(contentMode: .fill)
+            if currentImageIndex >= 0 && currentImageIndex < images.count {
+                ArtworkImage(images[currentImageIndex], width: 300, height: 300)
+                    .scaledToFill()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .offset(x: -120)
-                    .clipped()
-                    .opacity(opacity)
+                    .modifier(PanEffect(
+                        duration: imageDuration + transitionDuration,
+                        direction: panDirection
+                    ))
+                    .id("\(currentImageIndex)-\(panDirection.rawValue)")
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: transitionDuration), value: currentImageIndex)
             }
         }
+        .clipped()
     }
 
     private var noMusicView: some View {
@@ -83,31 +76,68 @@ struct RightImageView: View {
                 .font(.system(size: 20, weight: .bold))
         }
     }
-    
+
     private func startImageCycle() {
         stopImageCycle()
         timerCancellable = Timer.publish(every: imageDuration, on: .main, in: .common)
             .autoconnect()
             .sink { _ in transitionToNextImage() }
     }
-    
+
     private func transitionToNextImage() {
-        guard let imagesCount = albumManager.savedAlbums?.count,
-              imagesCount > 1 else { return }
-        
-        withAnimation(.easeInOut(duration: transitionDuration)) { opacity = 1.0 }
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + transitionDuration) {
-            currentImageIndex = nextImageIndex
-            offset = -115
-            nextImageIndex = (nextImageIndex + 1) % imagesCount
-            opacity = 0.0
-            withAnimation(.linear(duration: imageDuration + 2)) { offset = -90 }
+        guard let albumsCount = albumManager.savedAlbums?.count,
+              albumsCount > 1 else { return }
+
+        withAnimation(.easeInOut(duration: transitionDuration)) {
+            panDirection = panDirection == .right ? .left : .right
+            currentImageIndex = (currentImageIndex + 1) % albumsCount
         }
     }
-    
+
     private func stopImageCycle() {
         timerCancellable?.cancel()
         timerCancellable = nil
+    }
+}
+
+enum PanDirection: String, CaseIterable {
+    case left
+    case right
+}
+
+struct PanEffect: ViewModifier {
+    let duration: Double
+    let direction: PanDirection
+    @State private var offset: CGFloat = 0
+
+    private var startOffset: CGFloat {
+        switch direction {
+        case .right: return -90
+        case .left: return -30
+        }
+    }
+
+    private var endOffset: CGFloat {
+        switch direction {
+        case .right: return -60
+        case .left: return -60
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: offset)
+            .onAppear {
+                offset = startOffset
+                withAnimation(.linear(duration: duration)) {
+                    offset = endOffset
+                }
+            }
+            .onChange(of: direction) {
+                offset = startOffset
+                withAnimation(.linear(duration: duration)) {
+                    offset = endOffset
+                }
+            }
     }
 }

@@ -3,7 +3,6 @@ import MusicKit
 
 struct CollectionMenuModel: Equatable {
     let artwork: Artwork?
-    let id: String
     let name: String
     let description: String
 }

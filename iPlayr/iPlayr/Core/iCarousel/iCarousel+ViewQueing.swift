@@ -28,10 +28,6 @@ extension iCarousel {
         view.itemCell?.layer.transform = CATransform3DIdentity
     }
 
-    func dequeueItemView() -> UIView? {
-        itemViewPool.popFirst()
-    }
-
     func dequeuePlaceholderView() -> UIView? {
         placeholderViewPool.popFirst()
     }

@@ -5,7 +5,6 @@ extension iCarousel {
         static let minToggleDuration: CGFloat = 0.2
         static let maxToggleDuration: CGFloat = 0.4
         static let scrollDuration: TimeInterval = 0.4
-        static let insertDuration: TimeInterval = 0.4
         static let decelerateThreshold: CGFloat = 0.1
         static let scrollSpeedThreshold: CGFloat = 2.0
         static let scrollDistanceThreshold: CGFloat = 0.1

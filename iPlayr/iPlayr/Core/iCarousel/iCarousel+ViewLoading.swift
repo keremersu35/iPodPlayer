@@ -2,16 +2,14 @@ import UIKit
 
 extension iCarousel {
     final class ItemCell: UIView {
-        let index: Int
         var child: UIView {
             didSet {
                 replaceChild(oldValue: oldValue)
             }
         }
 
-        init(child: UIView, index: Int, frame: CGRect = .zero) {
+        init(child: UIView, frame: CGRect = .zero) {
             self.child = child
-            self.index = index
             super.init(frame: frame)
             setupInitialChild()
         }
@@ -61,7 +59,7 @@ extension iCarousel {
             if let containerView = containerView {
                 updateExistingContainer(containerView, with: view, at: index)
             } else {
-                addNewContainer(with: view, at: index)
+                addNewContainer(with: view)
             }
 
             finalizeViewLoading(view, at: index)
@@ -91,8 +89,8 @@ extension iCarousel {
         }
     }
 
-    private func addNewContainer(with view: UIView, at index: Int) {
-        let itemCell = createItemCell(view, index: index)
+    private func addNewContainer(with view: UIView) {
+        let itemCell = createItemCell(view)
         contentView.addSubview(itemCell)
     }
 
@@ -193,7 +191,7 @@ extension iCarousel {
         guard let dataSource = dataSource else { return }
 
         numberOfVisibleItems = 0
-        numberOfItems = dataSource.numberOfItems(in: self)
+        numberOfItems = dataSource.numberOfItems()
         numberOfPlaceholders = dataSource.numberOfPlaceholders(in: self)
     }
 
@@ -213,10 +211,10 @@ extension iCarousel {
 }
 
 extension iCarousel {
-    func createItemCell(_ view: UIView, index: Int) -> ItemCell {
+    func createItemCell(_ view: UIView) -> ItemCell {
         ensureItemWidthIsSet(for: view)
         let frame = calculateCellFrame(for: view)
-        return ItemCell(child: view, index: index, frame: frame)
+        return ItemCell(child: view, frame: frame)
     }
 
     private func ensureItemWidthIsSet(for view: UIView) {
@@ -239,7 +237,7 @@ extension iCarousel {
 
     private func createView(at index: Int) -> UIView {
         let viewType = determineViewType(for: index)
-        return requestViewFromDataSource(type: viewType, index: index) ?? createDefaultView()
+        return requestViewFromDataSource(type: viewType) ?? createDefaultView()
     }
 
     private func determineViewType(for index: Int) -> ViewType {
@@ -266,10 +264,10 @@ extension iCarousel {
         Int(CGFloat(state.numberOfPlaceholdersToShow) / 2.0) + index - numberOfItems
     }
 
-    private func requestViewFromDataSource(type: ViewType, index: Int) -> UIView? {
+    private func requestViewFromDataSource(type: ViewType) -> UIView? {
         switch type {
         case .item(let itemIndex):
-            return dataSource?.carousel(self, viewForItemAt: itemIndex, reusingView: dequeueItemView())
+            return dataSource?.carousel(viewForItemAt: itemIndex)
         case .placeholderBefore(let adjustedIndex), .placeholderAfter(let adjustedIndex):
             return dataSource?.carousel(self, placeholderViewAt: adjustedIndex, reusingView: dequeuePlaceholderView())
         }

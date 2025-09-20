@@ -10,7 +10,7 @@ struct PlayerView: View {
     @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @StateObject private var playerManager = AppleMusicManager()
+    @EnvironmentObject private var playerManager: AppleMusicManager
     @State private var currentDegree : Double = 80
     @State private var currentOpacity : Double = 0
     @State private var isScaleAnimation: Bool = true

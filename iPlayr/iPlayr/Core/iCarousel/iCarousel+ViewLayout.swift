@@ -111,7 +111,7 @@ extension iCarousel {
 
         configureBasicCellProperties(cell, at: index, offset: offset)
         calculateToggleIfNeeded(offset: offset)
-        applyTransformation(to: cell, itemView: itemView, offset: offset)
+        applyTransformation(to: cell, offset: offset)
     }
 
     private func configureBasicCellProperties(_ cell: ItemCell, at index: Int, offset: CGFloat) {
@@ -162,23 +162,11 @@ extension iCarousel {
         }
     }
 
-    private func applyTransformation(to cell: ItemCell, itemView: UIView, offset: CGFloat) {
+    private func applyTransformation(to cell: ItemCell, offset: CGFloat) {
         let transform = animator.transformForItemView(with: offset, in: self)
         cell.layer.transform = transform
-
-        let shouldShowBackfaces = calculateBackfaceVisibility(itemView: itemView, transform: transform)
-        cell.isHidden = !shouldShowBackfaces
     }
 
-    private func calculateBackfaceVisibility(itemView: UIView, transform: CATransform3D) -> Bool {
-        var showBackfaces = itemView.layer.isDoubleSided
-
-        if showBackfaces {
-            showBackfaces = animator.showBackfaces(view: itemView, in: self)
-        }
-
-        return showBackfaces || (transform.m33 > 0.0)
-    }
 
     func transformItemViews() {
         itemViews.forEach { index, itemView in

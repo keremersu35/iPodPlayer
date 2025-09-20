@@ -18,7 +18,7 @@ struct CoverFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StatusBar(title: isPlayerView ? "Now Playing" : "CoverFlow")
+            StatusBar(title: isPlayerView ? "Now Playing" : "Cover Flow")
 
             ZStack {
                 if viewState == .content {
@@ -302,11 +302,9 @@ final class CarouselViewController: UIViewController {
 }
 
 extension CarouselViewController: iCarouselDelegate, @preconcurrency iCarouselDataSource {
-    func numberOfItems(in carousel: iCarousel) -> Int {
-        albums.count
-    }
+    func numberOfItems() -> Int { albums.count }
 
-    func carousel(_ carousel: iCarousel, viewForItemAt index: Int, reusingView: UIView?) -> UIView {
+    func carousel(viewForItemAt index: Int) -> UIView {
         let album = albums[index]
         let isSelected = album.id == albums[selectedIndex.wrappedValue].id
 

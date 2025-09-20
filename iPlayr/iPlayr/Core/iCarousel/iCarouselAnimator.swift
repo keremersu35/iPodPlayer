@@ -8,7 +8,6 @@ extension iCarousel {
         open var fadeRange: CGFloat = 1.0
         open var fadeMinAlpha: CGFloat = 0.0
         open var spacing: CGFloat = 1.0
-        open var arc: CGFloat = .pi * 2.0
         open var isWrapEnabled: Bool = false
         open var offsetMultiplier: CGFloat = 1.0
 
@@ -52,10 +51,6 @@ extension iCarousel {
         private func applyViewpointOffset(_ transform: CATransform3D, carousel: iCarousel) -> CATransform3D {
             let offset = carousel.viewpointOffset
             return CATransform3DTranslate(transform, -offset.width, -offset.height, 0.0)
-        }
-
-        open func showBackfaces(view: UIView, in carousel: iCarousel) -> Bool {
-            true
         }
 
         final func _numberOfVisibleItems(in carousel: iCarousel) -> Int {
