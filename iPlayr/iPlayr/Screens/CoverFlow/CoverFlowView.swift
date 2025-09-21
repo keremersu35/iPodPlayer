@@ -108,6 +108,8 @@ struct CoverFlowView: View {
         } else {
             albums = savedAlbums
             iPlayrController.menuCount = albums.count
+            selectedIndex = max(0, albums.count / 2)
+            iPlayrController.selectedIndex = selectedIndex
             viewState = .content
         }
     }
@@ -175,6 +177,7 @@ struct CoverFlowView: View {
 
     private func showPlayer() {
         selectedTrack = albums[selectedIndex]
+        selectedTrackIndex = iPlayrController.selectedIndex
         isPlayerView = true
     }
 
