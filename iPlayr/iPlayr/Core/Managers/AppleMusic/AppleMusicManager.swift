@@ -126,6 +126,23 @@ final class AppleMusicManager: ObservableObject {
             break
         }
     }
+
+    func seekForward(seconds: Double = 5.0) async throws {
+        let currentTime = musicPlayer.playbackTime
+        guard let duration = currentTrack?.duration else { return }
+        let newTime = min(currentTime + seconds, duration)
+        musicPlayer.playbackTime = newTime
+    }
+
+    func seekBackward(seconds: Double = 5.0) async throws {
+        let currentTime = musicPlayer.playbackTime
+        let newTime = max(currentTime - seconds, 0.0)
+        musicPlayer.playbackTime = newTime
+    }
+
+    var currentPlaybackTime: TimeInterval {
+        return musicPlayer.playbackTime
+    }
 }
 
 enum MusicPlayerError: LocalizedError {

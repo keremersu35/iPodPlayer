@@ -32,8 +32,9 @@ struct ThemeView: View {
     }
     
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
         iPlayrController.activePage = .theme
+        iPlayrController.menuCount = menus.count
+        iPlayrController.selectedIndex = selectedIndex
         setupButtonListener()
     }
     

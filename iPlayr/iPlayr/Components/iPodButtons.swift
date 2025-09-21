@@ -29,8 +29,14 @@ struct iPlayrButtons: View {
 
                 makeTextButton("MENU", offset: -buttonOffset) { buttonController.menuButtonPressed() }
                 makeIconButton(imageName: ImageNames.System.playPause, offsetY: buttonOffset) { buttonController.playPauseButtonPressed() }
-                makeIconButton(imageName: ImageNames.System.forwardEndAlt, offsetX: buttonOffset) { buttonController.forwardEndAltButtonPressed() }
-                makeIconButton(imageName: ImageNames.System.backwardEndAlt, offsetX: -buttonOffset) { buttonController.backwardEndAltButtonPressed() }
+                makeSeekButton(imageName: ImageNames.System.forwardEndAlt, offsetX: buttonOffset,
+                             onTap: { buttonController.forwardEndAltButtonPressed() },
+                             onLongPressStart: { buttonController.forwardLongPressStarted() },
+                             onLongPressEnd: { buttonController.forwardLongPressEnded() })
+                makeSeekButton(imageName: ImageNames.System.backwardEndAlt, offsetX: -buttonOffset,
+                             onTap: { buttonController.backwardEndAltButtonPressed() },
+                             onLongPressStart: { buttonController.backwardLongPressStarted() },
+                             onLongPressEnd: { buttonController.backwardLongPressEnded() })
             }
             .frame(width: size, height: size * 0.9)
         }
@@ -64,6 +70,19 @@ struct iPlayrButtons: View {
             .offset(x: offsetX, y: offsetY)
             .environmentObject(theme)
     }
+
+    @ViewBuilder
+    private func makeSeekButton(imageName: String, offsetX: CGFloat = 0, offsetY: CGFloat = 0,
+                               onTap: @escaping () -> Void,
+                               onLongPressStart: @escaping () -> Void,
+                               onLongPressEnd: @escaping () -> Void) -> some View {
+        iPlayrSeekButton(imageName: imageName,
+                        onTapAction: onTap,
+                        onLongPressStart: onLongPressStart,
+                        onLongPressEnd: onLongPressEnd)
+            .offset(x: offsetX, y: offsetY)
+            .environmentObject(theme)
+    }
     
     @ViewBuilder
     private func makeTextButton(_ text: String, offset: CGFloat, action: @escaping () -> Void) -> some View {
@@ -80,7 +99,7 @@ struct iPlayrIconButton: View {
     let imageName: String
     let onTapAction: () -> Void
     @EnvironmentObject private var theme: ThemeManager
-    
+
     var body: some View {
         Image(systemName: imageName)
             .resizable()
@@ -89,5 +108,37 @@ struct iPlayrIconButton: View {
             .padding(20)
             .contentShape(Rectangle())
             .onTapGesture(perform: onTapAction)
+    }
+}
+
+struct iPlayrSeekButton: View {
+    let imageName: String
+    let onTapAction: () -> Void
+    let onLongPressStart: () -> Void
+    let onLongPressEnd: () -> Void
+    @EnvironmentObject private var theme: ThemeManager
+    @State private var isPressed: Bool = false
+
+    var body: some View {
+        Image(systemName: imageName)
+            .resizable()
+            .frame(width: 24, height: 12)
+            .foregroundColor(theme.currentTheme.wheelIconTint)
+            .padding(20)
+            .contentShape(Rectangle())
+            .scaleEffect(isPressed ? 0.9 : 1.0)
+            .onTapGesture(perform: onTapAction)
+            .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 50,
+                               pressing: { pressing in
+                                   withAnimation(.easeInOut(duration: 0.1)) {
+                                       isPressed = pressing
+                                   }
+                                   if pressing {
+                                       onLongPressStart()
+                                   } else {
+                                       onLongPressEnd()
+                                   }
+                               },
+                               perform: {})
     }
 }

@@ -14,6 +14,11 @@ struct PlayerView: View {
     @State private var currentDegree : Double = 80
     @State private var currentOpacity : Double = 0
     @State private var isScaleAnimation: Bool = true
+    @State private var seekTimer: Timer?
+    @State private var isSeekingForward: Bool = false
+    @State private var isSeekingBackward: Bool = false
+    @State private var seekStartTime: Date?
+    @State private var currentSeekSpeed: Double = 1.0
     
     var body: some View {
         VStack(spacing: 0) {
@@ -144,9 +149,73 @@ struct PlayerView: View {
                     Task {
                         try? await playerManager.togglePlayPause()
                     }
+                case .forwardLongPress:
+                    startSeekingForward()
+                case .forwardLongPressEnd:
+                    stopSeeking()
+                case .backwardLongPress:
+                    startSeekingBackward()
+                case .backwardLongPressEnd:
+                    stopSeeking()
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func startSeekingForward() {
+        guard !isSeekingForward && !isSeekingBackward else { return }
+        isSeekingForward = true
+        seekStartTime = Date()
+        currentSeekSpeed = 1.0
+
+        seekTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            Task {
+                await updateSeekSpeed()
+                try? await playerManager.seekForward(seconds: currentSeekSpeed)
+            }
+        }
+    }
+
+    private func startSeekingBackward() {
+        guard !isSeekingForward && !isSeekingBackward else { return }
+        isSeekingBackward = true
+        seekStartTime = Date()
+        currentSeekSpeed = 1.0
+
+        seekTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            Task {
+                await updateSeekSpeed()
+                try? await playerManager.seekBackward(seconds: currentSeekSpeed)
+            }
+        }
+    }
+
+    private func stopSeeking() {
+        seekTimer?.invalidate()
+        seekTimer = nil
+        isSeekingForward = false
+        isSeekingBackward = false
+        seekStartTime = nil
+        currentSeekSpeed = 1.0
+    }
+
+    @MainActor
+    private func updateSeekSpeed() {
+        guard let startTime = seekStartTime else { return }
+
+        let elapsedTime = Date().timeIntervalSince(startTime)
+        switch elapsedTime {
+        case 0..<1:
+            currentSeekSpeed = 1.0
+        case 1..<3:
+            currentSeekSpeed = 2.0
+        case 3..<5:
+            currentSeekSpeed = 5.0
+        case 5..<10:
+            currentSeekSpeed = 10.0
+        default:
+            currentSeekSpeed = 20.0
+        }
     }
 }
 
@@ -224,14 +293,14 @@ struct SongProgressView: View {
     @MainActor private func startVisualTimer() {
         timer?.invalidate()
         timer = nil
-        
+
         guard currentDuration > 0 else { return }
-        let increment = 1.0 / currentDuration
-        
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in            
+
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             Task { @MainActor in
-                if visualProgress < 1.0 && playerManager.isPlaying {
-                    visualProgress = min(1.0, visualProgress + increment)
+                if playerManager.isPlaying {
+                    let currentTime = playerManager.currentPlaybackTime
+                    visualProgress = min(1.0, currentTime / currentDuration)
                 }
             }
         }

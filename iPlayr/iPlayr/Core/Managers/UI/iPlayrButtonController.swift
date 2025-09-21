@@ -3,6 +3,7 @@ import AVFAudio
 
 enum ButtonAction {
     case menu, forwardEndAlt, backwardEndAlt, playPause, select
+    case forwardLongPress, backwardLongPress, forwardLongPressEnd, backwardLongPressEnd
 }
 
 enum Pages {
@@ -36,6 +37,22 @@ final class iPlayrButtonController: ObservableObject {
     
     func playPauseButtonPressed() {
         buttonPressed.send(.playPause)
+    }
+
+    func forwardLongPressStarted() {
+        buttonPressed.send(.forwardLongPress)
+    }
+
+    func forwardLongPressEnded() {
+        buttonPressed.send(.forwardLongPressEnd)
+    }
+
+    func backwardLongPressStarted() {
+        buttonPressed.send(.backwardLongPress)
+    }
+
+    func backwardLongPressEnded() {
+        buttonPressed.send(.backwardLongPressEnd)
     }
 
     func scrollUp() {
