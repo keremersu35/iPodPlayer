@@ -3,13 +3,15 @@
   <img src="https://github.com/user-attachments/assets/07fd3811-a954-42f9-83fe-9dc0c5ce4cac" width="840" height="348" />
 </div>
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/1f63b4b0-6dc6-4d32-9d42-5750baf822b4" width="200" />
-  <img src="https://github.com/user-attachments/assets/7ca93f67-ab1a-448f-8a13-0fa3f664d042" width="200" />
-  <img src="https://github.com/user-attachments/assets/652fae55-849f-48d6-80c8-5d91d7679406" width="200" />
-  <img src="https://github.com/user-attachments/assets/501e0141-03e8-4e1e-af06-c4a52438088c" width="200" />
-</div>
+<h3 align="center">✨ iPlayr in Action</h3>
+<p align="center">A minimal and smooth playback experience — powered by Apple Music and SwiftUI.</p>
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/5ba23608-a129-43af-8e5a-40420519c92c" width="200" />
+  <img src="https://github.com/user-attachments/assets/bd7c1f93-0704-4079-af60-5928f0042f54" width="200" />
+  <img src="https://github.com/user-attachments/assets/3c4a05a6-f250-46cd-8206-04ecc6ea716a" width="200" />
+  <img src="https://github.com/user-attachments/assets/ce615eb9-0662-4f1a-953a-cd76972d2c66" width="200" />
+</div>
 
 ## 📌 About
 
