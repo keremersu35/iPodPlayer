@@ -1,5 +1,8 @@
 # iPlayr
 
+Experience the nostalgia of the iPod — reimagined for today.  
+**iPlayr** brings the classic Cover Flow interface to life using SwiftUI and Apple Music integration.
+
 <div align="center">
   <img src="https://github.com/user-attachments/assets/5ba23608-a129-43af-8e5a-40420519c92c" width="200" />
   <img src="https://github.com/user-attachments/assets/bd7c1f93-0704-4079-af60-5928f0042f54" width="200" />
