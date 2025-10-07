@@ -1,16 +1,16 @@
 # iPlayr
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/07fd3811-a954-42f9-83fe-9dc0c5ce4cac" width="840" height="348" />
-</div>
-
-<h3 align="center">✨ iPlayr in Action</h3>
-<p align="center">A minimal and smooth playback experience — powered by Apple Music and SwiftUI.</p>
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/5ba23608-a129-43af-8e5a-40420519c92c" width="200" />
   <img src="https://github.com/user-attachments/assets/bd7c1f93-0704-4079-af60-5928f0042f54" width="200" />
   <img src="https://github.com/user-attachments/assets/3c4a05a6-f250-46cd-8206-04ecc6ea716a" width="200" />
   <img src="https://github.com/user-attachments/assets/ce615eb9-0662-4f1a-953a-cd76972d2c66" width="200" />
+</div>
+
+<hr>
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/07fd3811-a954-42f9-83fe-9dc0c5ce4cac" width="840" height="348" />
 </div>
 
 ## 📌 About
