@@ -16,12 +16,13 @@ Experience the nostalgia of the iPod — reimagined for today.
   <img src="https://github.com/user-attachments/assets/07fd3811-a954-42f9-83fe-9dc0c5ce4cac" width="840" height="348" />
 </div>
 
-## 📌 About
+## About
 
 iPlayr is a modern and minimalistic music player designed to provide a seamless playback experience using Apple Music. The app features a Cover Flow-inspired UI and intuitive controls that replicate the nostalgic iPod feel while leveraging the power of SwiftUI.
 
 <br>
-## 🚀 Features
+
+## Features
 
 🎵 Apple Music Integration - Stream and control your music with ease.
 
@@ -32,18 +33,20 @@ iPlayr is a modern and minimalistic music player designed to provide a seamless 
 🔄 Playlist Support - Play entire playlists or specific albums.
 
 ⚡ Optimized Performance - Fast and efficient SwiftUI-based design.
+
 <br>
 
-## 📋 Prerequisites
+## Prerequisites
 
  Before running iPlayr, ensure you have the following installed:
 
 - Xcode 15 or later
 - iOS 17+ device
 - An active Apple Music subscription
+
 <br>
 
-## 🛠 Installation
+## Installation
 
 - Clone or Download the repository:
 You can clone with:
@@ -52,7 +55,8 @@ git clone https://github.com/keremersu35/iPodPlayer.git
 - Run the app on the connected device.
 
 <br>
-## 👨‍💻 Contribution
+
+## Contribution
 
 - We welcome contributions! To contribute:
 - Fork the repository.
@@ -60,8 +64,9 @@ git clone https://github.com/keremersu35/iPodPlayer.git
 - Commit your changes: git commit -m "Add new feature"
 - Push to your branch: git push origin feature-branch-name
 - Open a Pull Request.
+
 <br>
 
-## 🤝 Support
+## Support
 
 If you like this project, give it a ⭐ on GitHub! For any issues, feel free to open an issue or contact me.
