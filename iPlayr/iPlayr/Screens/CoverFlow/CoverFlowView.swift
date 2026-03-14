@@ -38,7 +38,8 @@ struct CoverFlowView: View {
                         trackIndex: selectedTrackIndex,
                         isFromCoverFlow: true,
                         isFromPlaylist: false,
-                        initialArtwork: albums[selectedIndex].artwork
+                        initialArtwork: albums[selectedIndex].artwork,
+                        onDismissFromCoverFlow: handleMenuAction
                     )
                     .id(playerViewId)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -54,7 +55,6 @@ struct CoverFlowView: View {
         .navigationBarBackButtonHidden()
         .task { await loadAlbums() }
         .onAppear(perform: setup)
-        .onDisappear(perform: cleanup)
         .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
             guard iPlayrController.activePage == .coverFlow else { return }
             navigateTo(newIndex, updateController: false)
@@ -190,11 +190,6 @@ struct CoverFlowView: View {
         iPlayrController.menuCount = albums.count
         iPlayrController.selectedIndex = selectedIndex
         iPlayrController.takeControl { handleButtonAction($0) }
-        iPlayrController.setRightView(false)
-    }
-
-    private func cleanup() {
-        iPlayrController.setRightView(true)
     }
 
     // MARK: - Button Actions
@@ -241,5 +236,6 @@ struct CoverFlowView: View {
         iPlayrController.activePage = .coverFlow
         iPlayrController.menuCount = albums.count
         iPlayrController.selectedIndex = selectedIndex
+        iPlayrController.takeControl { handleButtonAction($0) }
     }
 }

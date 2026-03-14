@@ -45,6 +45,7 @@ final class AppleMusicManager: ObservableObject {
     }
 
     func playPlaylist(id: String, fromIndex: Int = 0) async throws {
+        currentTrack = nil
         let request = MusicLibraryRequest<Playlist>()
         let response = try await request.response()
 

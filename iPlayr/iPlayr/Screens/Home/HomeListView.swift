@@ -38,7 +38,6 @@ struct HomeListView: View {
             if isAuthorized {
                 iPlayrController.resetIndex(for: .home)
                 iPlayrController.setActivePage(.home, menuCount: menus.count)
-                iPlayrController.setRightView(true)
                 selectedIndex = iPlayrController.selectedIndex
             }
         }
@@ -49,7 +48,6 @@ struct HomeListView: View {
     
     private func setup() {
         iPlayrController.setActivePage(.home, menuCount: menus.count)
-        iPlayrController.setRightView(true)
         selectedIndex = iPlayrController.selectedIndex
         
         iPlayrController.takeControl { action in
@@ -71,7 +69,6 @@ struct HomeListView: View {
         switch selectedIndex {
         case 0: route = .music
         case 1:
-            iPlayrController.setRightView(false)
             route = .settings
         case 2:
             route = .signIn

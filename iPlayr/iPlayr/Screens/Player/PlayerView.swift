@@ -7,6 +7,7 @@ struct PlayerView: View {
     @State var isFromCoverFlow: Bool = false
     @State var isFromPlaylist: Bool = false
     var initialArtwork: Artwork?
+    var onDismissFromCoverFlow: (() -> Void)? = nil
     @State private var activeArtwork: Artwork?
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
@@ -44,32 +45,20 @@ struct PlayerView: View {
                                 .scaleEffect(isScaleAnimation ? 1.2 : 1)
                                 .id(playerManager.currentTrack?.title ?? "")
                                 .onAppear {
-                                    if isFromCoverFlow {
-                                        isScaleAnimation = true
-                                        currentDegree = initialRotation
-                                        currentOpacity = 0
-
-                                        DispatchQueue.main.async {
-                                            withAnimation(.snappy(duration: flipDuration)) {
-                                                isScaleAnimation = false
-                                                currentDegree = finalRotation
-                                            }
+                                    guard isFromCoverFlow else { return }
+                                    isScaleAnimation = true
+                                    currentDegree = initialRotation
+                                    currentOpacity = 0
+                                    DispatchQueue.main.async {
+                                        withAnimation(.snappy(duration: flipDuration)) {
+                                            isScaleAnimation = false
+                                            currentDegree = finalRotation
                                         }
-
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + fadeDelay) {
-                                            withAnimation(.easeInOut(duration: fadeDuration)) {
-                                                currentOpacity = 1
-                                            }
-                                        }
-                                    } else {
-                                        isScaleAnimation = false
-                                        currentDegree = finalRotation
-                                        currentOpacity = 1
                                     }
-                                }
-                                .onChange(of: playerManager.currentTrack) { _, newValue in
-                                    if let newArtwork = newValue?.artwork {
-                                        activeArtwork = newArtwork
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + fadeDelay) {
+                                        withAnimation(.easeInOut(duration: fadeDuration)) {
+                                            currentOpacity = 1
+                                        }
                                     }
                                 }
                         } else {
@@ -77,6 +66,11 @@ struct PlayerView: View {
                         }
                     }
                     .frame(width: 150, height: 150)
+                    .onChange(of: playerManager.currentTrack) { _, newValue in
+                        if let newArtwork = newValue?.artwork {
+                            activeArtwork = newArtwork
+                        }
+                    }
 
                     VStack(alignment: .leading, spacing: 0) {
                         Text(playerManager.currentTrack?.title ?? "")
@@ -115,6 +109,11 @@ struct PlayerView: View {
             } else {
                 activeArtwork = playerManager.currentTrack?.artwork
             }
+            if !isFromCoverFlow {
+                currentDegree = finalRotation
+                currentOpacity = 1
+                isScaleAnimation = false
+            }
             iPlayrController.activePage = .player
             setupButtonListener()
             Task {
@@ -135,7 +134,9 @@ struct PlayerView: View {
         iPlayrController.takeControl { action in
             switch action {
             case .menu:
-                if !isFromCoverFlow {
+                if isFromCoverFlow {
+                    onDismissFromCoverFlow?()
+                } else {
                     dismiss()
                 }
             case .select:

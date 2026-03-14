@@ -1,5 +1,4 @@
-import Combine
-import AVFAudio
+import Foundation
 
 enum ButtonAction: Sendable {
     case menu, forwardEndAlt, backwardEndAlt, playPause, select
@@ -15,34 +14,36 @@ enum Page: Sendable {
 final class iPlayrButtonController: ObservableObject {
     @Published var selectedIndex: Int = 0
     @Published var menuCount: Int = 0
-    @Published private(set) var hasRightView: Bool = true
     @Published var activePage: Page = .home
 
-    // MARK: - Exclusive Input Responder Architecture
-    // Sadece tek bir handler aktif olabilir. Combine yayınlarından kurtuluyoruz.
-    private var activeInputHandler: ((ButtonAction) -> Void)?
+    var hasRightView: Bool {
+        switch activePage {
+        case .home, .music, .settings, .theme, .login:
+            return true
+        default:
+            return false
+        }
+    }
 
-    // View'lar açıldığında bu fonksiyonu çağırarak kontrolü ele alacak
+    private var activeInputHandler: ((ButtonAction) -> Void)?
+    private var globalPlaybackHandler: ((ButtonAction) -> Void)?
+
     func takeControl(handler: @escaping (ButtonAction) -> Void) {
         self.activeInputHandler = handler
     }
 
-    // Eğer navigation sırasında kontrolü boşa çıkarmak istersek
     func releaseControl() {
         self.activeInputHandler = nil
     }
 
-    // Eski yapı uyumluluğu için (yavaş yavaş kaldıracağız)
-    let buttonPressed = PassthroughSubject<ButtonAction, Never>()
-
-    func setRightView(_ visible: Bool) {
-        hasRightView = visible
+    func setGlobalPlaybackHandler(_ handler: @escaping (ButtonAction) -> Void) {
+        self.globalPlaybackHandler = handler
     }
 
     private var savedIndices: [Page: Int] = [:]
 
     private var lastInteractionTime: Date = .distantPast
-    private let debounceInterval: TimeInterval = 0.3 // Debounce hala gerekli
+    private let debounceInterval: TimeInterval = 0.3
 
     private func handleInput(_ action: ButtonAction) {
         let now = Date()
@@ -53,13 +54,13 @@ final class iPlayrButtonController: ObservableObject {
 
         activeInputHandler?(action)
 
-        // Playback actions always reach PlayerView's subscriber regardless of active page
         switch action {
-        case .playPause, .forwardEndAlt, .backwardEndAlt,
-             .forwardLongPress, .forwardLongPressEnd, .backwardLongPress, .backwardLongPressEnd:
-            buttonPressed.send(action)
+        case .playPause, .forwardEndAlt, .backwardEndAlt:
+            if activePage != .player {
+                globalPlaybackHandler?(action)
+            }
         default:
-            if activeInputHandler == nil { buttonPressed.send(action) }
+            break
         }
     }
 
@@ -95,8 +96,6 @@ final class iPlayrButtonController: ObservableObject {
         activePage = page
         self.menuCount = menuCount
         selectedIndex = savedIndices[page] ?? 0
-        // STATE RESET: Yeni sayfaya geçerken handler'ı temizle (View kendi atayana kadar)
-        // releaseControl() // Bunu yaparsak View onAppear olana kadar input boşluğa gider. Güvenli.
     }
 
     func saveCurrentIndex() {

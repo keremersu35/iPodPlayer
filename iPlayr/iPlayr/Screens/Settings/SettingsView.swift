@@ -30,7 +30,7 @@ struct SettingsView: View {
     private func setup() {
         iPlayrController.setActivePage(.settings, menuCount: menus.count)
         selectedIndex = iPlayrController.selectedIndex
-        
+
         iPlayrController.takeControl { action in
             handleButtonAction(action)
         }

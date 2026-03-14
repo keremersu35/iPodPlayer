@@ -2,9 +2,8 @@ import SwiftUI
 
 struct iPlayrScreen: View {
     @State private var routes: [Route] = []
-    @State private var hasRightView: Bool = true
     @EnvironmentObject var iPlayrController: iPlayrButtonController
-    
+
     var body: some View {
         GeometryReader { geometry in
             contentView(geometry: geometry)
@@ -15,9 +14,6 @@ struct iPlayrScreen: View {
                         .stroke(lineWidth: 6)
                         .foregroundColor(.screenFrame)
                 )
-                .onChange(of: iPlayrController.hasRightView) { _, newValue in
-                    hasRightView = newValue
-                }
         }
     }
 
@@ -28,32 +24,27 @@ struct iPlayrScreen: View {
                 .shadow(color: .black.opacity(0.5), radius: 10, x: 10, y: 5)
                 .zIndex(1)
 
-            if hasRightView {
+            if iPlayrController.hasRightView {
                 RightImageView()
                     .frame(width: geometry.size.width / 2, alignment: .bottomLeading)
                     .zIndex(0)
+                    .transition(.identity)
             }
         }
+        .animation(nil, value: iPlayrController.hasRightView)
     }
 
     private func createNavigationStack(geometry: GeometryProxy) -> some View {
         NavigationStack(path: $routes) {
             HomeListView()
                 .environmentObject(iPlayrController)
-                .frame(width: hasRightView ? geometry.size.width / 2 : geometry.size.width)
+                .frame(width: iPlayrController.hasRightView ? geometry.size.width / 2 : geometry.size.width)
+                .animation(nil, value: iPlayrController.hasRightView)
                 .navigationDestination(for: Route.self) { route in
                     route.destination.environmentObject(iPlayrController)
                 }
         }
         .onNavigate { navType in
-            Task {
-                await handleNavigation(navType)
-            }
-        }
-    }
-
-    private func handleNavigation(_ navType: NavigationType) async {
-        DispatchQueue.main.async {
             switch navType {
             case .push(let route):
                 routes.append(route)

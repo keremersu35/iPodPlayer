@@ -55,17 +55,17 @@ struct MusicListView: View {
 
         guard iPlayrController.activePage == .music else { return }
 
-        if selectedIndex == 0 {
-             iPlayrController.setRightView(false)
+        let route: Route
+        let targetPage: Page
+        switch selectedIndex {
+        case 0: route = .coverFlow;  targetPage = .coverFlow
+        case 1: route = .playlists;  targetPage = .playlists
+        case 2: route = .albums;     targetPage = .albums
+        default: route = .playlists; targetPage = .playlists
         }
 
-        let route: Route
-        switch selectedIndex {
-        case 0: route = .coverFlow
-        case 1: route = .playlists
-        case 2: route = .albums
-        default: route = .playlists
-        }
-        navigate(.push(route))
+        iPlayrController.saveCurrentIndex()
+        iPlayrController.activePage = targetPage
+        DispatchQueue.main.async { navigate(.push(route)) }
     }
 }

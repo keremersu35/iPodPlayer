@@ -48,7 +48,8 @@ final class ThemeManager: ObservableObject {
     @AppStorage("currentTheme") private var currentThemeType: ThemeType = .silver
 
     init() {
-        self.currentTheme = ThemeFactory.createTheme(for: currentThemeType)
+        let saved = UserDefaults.standard.string(forKey: "currentTheme").flatMap(ThemeType.init) ?? .silver
+        currentTheme = ThemeFactory.createTheme(for: saved)
     }
 
     func setTheme(_ themeType: ThemeType) {
