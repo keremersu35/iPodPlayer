@@ -6,7 +6,7 @@ final class AlbumRepositoryImpl: AlbumRepositoryProtocol {
     
     func getAlbumTracks(id: String) async throws -> MusicItemCollection<Track>? {
         guard let album = try await fetchTracks(id: id)?.with(.tracks) else {
-            throw NSError(domain: "MusicKitPlaylist", code: 2, userInfo: [NSLocalizedDescriptionKey: "Playlist not found."])
+            throw NSError(domain: "MusicKitPlaylist", code: 2, userInfo: [NSLocalizedDescriptionKey: "Album not found."])
         }
         return album.tracks
     }

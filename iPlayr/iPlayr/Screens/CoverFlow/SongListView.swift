@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 import MusicKit
 
 struct SongListView: View {
@@ -8,7 +7,6 @@ struct SongListView: View {
     @Binding var isSongList: Bool
     @EnvironmentObject var iPlayrController: iPlayrButtonController
     @StateObject private var albumManager = AlbumManager()
-    @State private var cancellables = Set<AnyCancellable>()
     @State private var selectedIndex = 0
     @State private var isLoading = true
     private var shouldLoad: Bool { isSongList && isSelected }
@@ -107,8 +105,6 @@ struct SongListView: View {
 
     private func cleanup() {
         isLoading = true
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
     }
 }
 

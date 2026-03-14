@@ -1,9 +1,7 @@
 import SwiftUI
-import Combine
 
 struct SettingsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     private var menus: [Menu] = [.init(id: 0, name: "Themes", next: true)]
@@ -26,7 +24,6 @@ struct SettingsView: View {
         .navigationBarBackButtonHidden()
         .onDisappear {
             iPlayrController.saveCurrentIndex()
-            cancelSubscriptions()
         }
     }
     
@@ -60,7 +57,4 @@ struct SettingsView: View {
         navigate(.push(route))
     }
     
-    private func cancelSubscriptions() {
-        cancellables.cancelAll()
-    }
 }

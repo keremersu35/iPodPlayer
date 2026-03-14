@@ -1,6 +1,5 @@
 import SwiftUI
 import MusicKit
-import Combine
 
 struct HomeListView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
@@ -19,7 +18,6 @@ struct HomeListView: View {
     }
     
     @State private var selectedIndex: Int = 0
-    @State private var cancellables = Set<AnyCancellable>()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -46,7 +44,6 @@ struct HomeListView: View {
         }
         .onDisappear {
             iPlayrController.saveCurrentIndex()
-            cancelSubscriptions()
         }
     }
     
@@ -83,7 +80,4 @@ struct HomeListView: View {
         navigate(.push(route))
     }
     
-    private func cancelSubscriptions() {
-        cancellables.cancelAll()
-    }
 }

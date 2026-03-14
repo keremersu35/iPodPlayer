@@ -46,20 +46,21 @@ final class iPlayrButtonController: ObservableObject {
 
     private func handleInput(_ action: ButtonAction) {
         let now = Date()
-        // Debounce sadece Menu ve Select için kritik
         if action == .menu || action == .select {
             guard now.timeIntervalSince(lastInteractionTime) > debounceInterval else { return }
             lastInteractionTime = now
         }
 
-        // ÖNCELİK 1: Aktif Handler varsa ona gönder ve BİTİR.
-        if let handler = activeInputHandler {
-            handler(action)
-            return
-        }
+        activeInputHandler?(action)
 
-        // ÖNCELİK 2: Handler atanmamışsa eski sisteme (sink) düş (Migration süreci için)
-        buttonPressed.send(action)
+        // Playback actions always reach PlayerView's subscriber regardless of active page
+        switch action {
+        case .playPause, .forwardEndAlt, .backwardEndAlt,
+             .forwardLongPress, .forwardLongPressEnd, .backwardLongPress, .backwardLongPressEnd:
+            buttonPressed.send(action)
+        default:
+            if activeInputHandler == nil { buttonPressed.send(action) }
+        }
     }
 
     func menuButtonPressed() { handleInput(.menu) }

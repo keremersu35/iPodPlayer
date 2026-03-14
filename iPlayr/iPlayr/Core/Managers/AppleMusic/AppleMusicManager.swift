@@ -72,11 +72,13 @@ final class AppleMusicManager: ObservableObject {
     func skipToNextTrack() async throws {
         guard !isLast else { return }
         try await musicPlayer.skipToNextEntry()
+        await updatePlayerState()
     }
 
     func skipToPreviousTrack() async throws {
         guard !isFirst else { return }
         try await musicPlayer.skipToPreviousEntry()
+        await updatePlayerState()
     }
 
     func togglePlayPause() async throws {

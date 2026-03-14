@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 struct PlaylistsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
@@ -7,7 +6,6 @@ struct PlaylistsView: View {
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     @State private var selectedIndex = 0
-    @State private var cancellables = Set<AnyCancellable>()
     @State private var viewState: ViewState = .loading
 
     var body: some View {
@@ -26,7 +24,6 @@ struct PlaylistsView: View {
         .navigationBarBackButtonHidden()
         .onDisappear {
             iPlayrController.saveCurrentIndex()
-            cancelSubscriptions()
         }
     }
     
@@ -97,7 +94,4 @@ struct PlaylistsView: View {
         navigate(.push(.playlistTracks(id: id.rawValue, playlistName: playlistName)))
     }
     
-    private func cancelSubscriptions() {
-        cancellables.cancelAll()
-    }
 }

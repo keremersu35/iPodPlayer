@@ -200,14 +200,6 @@ struct CoverFlowView: View {
     // MARK: - Button Actions
 
     private func handleButtonAction(_ action: ButtonAction) {
-        if isPlayerView {
-            if action == .menu {
-                handleMenuAction()
-            } else {
-                iPlayrController.buttonPressed.send(action)
-            }
-            return
-        }
         switch action {
         case .menu:   handleMenuAction()
         case .select: handleSelectAction()
@@ -231,9 +223,13 @@ struct CoverFlowView: View {
 
     private func handleSelectAction() {
         if isSongList && iPlayrController.activePage == .coverFlowSongList {
-            playerViewId = UUID()
-            selectedTrackIndex = iPlayrController.selectedIndex
-            isPlayerView = true
+            let trackIndex = iPlayrController.selectedIndex
+            // Wait for the flip animation to finish before loading PlayerView
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                playerViewId = UUID()
+                selectedTrackIndex = trackIndex
+                isPlayerView = true
+            }
         } else if !isSongList && !isPlayerView {
             isSongList = true
             iPlayrController.activePage = .coverFlowSongList

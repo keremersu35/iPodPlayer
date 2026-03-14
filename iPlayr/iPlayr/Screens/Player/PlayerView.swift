@@ -1,6 +1,5 @@
 import SwiftUI
 import MusicKit
-import Combine
 
 struct PlayerView: View {
     @State var id: String
@@ -9,19 +8,24 @@ struct PlayerView: View {
     @State var isFromPlaylist: Bool = false
     var initialArtwork: Artwork?
     @State private var activeArtwork: Artwork?
-    @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var playerManager: AppleMusicManager
-    @State private var currentDegree : Double = 80
-    @State private var currentOpacity : Double = 0
+    @State private var currentDegree: Double = 80
+    @State private var currentOpacity: Double = 0
     @State private var isScaleAnimation: Bool = true
     @State private var seekTimer: Timer?
     @State private var isSeekingForward: Bool = false
     @State private var isSeekingBackward: Bool = false
     @State private var seekStartTime: Date?
     @State private var currentSeekSpeed: Double = 1.0
-    
+
+    private let initialRotation: Double = 80
+    private let finalRotation: Double = 5
+    private let flipDuration: Double = 0.6
+    private let fadeDelay: Double = 0.3
+    private let fadeDuration: Double = 0.4
+
     var body: some View {
         VStack(spacing: 0) {
             if !isFromCoverFlow {
@@ -37,29 +41,29 @@ struct PlayerView: View {
                                 .frame(width: 150, height: 150)
                                 .reflection()
                                 .rotation3DEffect(.degrees(currentDegree), axis: (x: 0, y: 1, z: 0))
-                                .scaleEffect(isScaleAnimation ? 1.2 : 1 )
+                                .scaleEffect(isScaleAnimation ? 1.2 : 1)
                                 .id(playerManager.currentTrack?.title ?? "")
                                 .onAppear {
                                     if isFromCoverFlow {
                                         isScaleAnimation = true
-                                        currentDegree = 80
+                                        currentDegree = initialRotation
                                         currentOpacity = 0
-                                        
+
                                         DispatchQueue.main.async {
-                                            withAnimation(.snappy(duration: 0.6)) {
+                                            withAnimation(.snappy(duration: flipDuration)) {
                                                 isScaleAnimation = false
-                                                currentDegree = 5
+                                                currentDegree = finalRotation
                                             }
                                         }
-                                        
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                            withAnimation(.easeInOut(duration: 0.4)) {
+
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + fadeDelay) {
+                                            withAnimation(.easeInOut(duration: fadeDuration)) {
                                                 currentOpacity = 1
                                             }
                                         }
                                     } else {
                                         isScaleAnimation = false
-                                        currentDegree = 5
+                                        currentDegree = finalRotation
                                         currentOpacity = 1
                                     }
                                 }
@@ -73,7 +77,7 @@ struct PlayerView: View {
                         }
                     }
                     .frame(width: 150, height: 150)
-                    
+
                     VStack(alignment: .leading, spacing: 0) {
                         Text(playerManager.currentTrack?.title ?? "")
                             .font(.system(size: 16, weight: .bold))
@@ -114,6 +118,7 @@ struct PlayerView: View {
             iPlayrController.activePage = .player
             setupButtonListener()
             Task {
+                try? await Task.sleep(for: .milliseconds(200))
                 if isFromPlaylist {
                     try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
                 } else {
@@ -121,64 +126,38 @@ struct PlayerView: View {
                 }
             }
         }
+        .onDisappear { stopSeeking() }
         .navigationBarBackButtonHidden()
     }
-    
+
     private func setupButtonListener() {
         guard iPlayrController.activePage == .player else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    if !isFromCoverFlow {
-                        dismiss()
-                    }
-                case .select:
-                    break
-                case .forwardEndAlt:
-                    Task {
-                        do {
-                            await MainActor.run {
-                                playerManager.isPlaying = false
-                            }
-                            try await playerManager.skipToNextTrack()
-                            await MainActor.run {
-                                playerManager.isPlaying = true
-                            }
-                        } catch {
-                            print("Error skipping track: \(error)")
-                        }
-                    }
-                case .backwardEndAlt:
-                    Task {
-                        do {
-                            await MainActor.run {
-                                playerManager.isPlaying = false
-                            }
-                            try await playerManager.skipToPreviousTrack()
-                            try await Task.sleep(nanoseconds: 500_000_000)
-                            await MainActor.run {
-                                playerManager.isPlaying = true
-                            }
-                        } catch {
-                            print("Error skipping track: \(error)")
-                        }
-                    }
-                case .playPause:
-                    Task {
-                        try? await playerManager.togglePlayPause()
-                    }
-                case .forwardLongPress:
-                    startSeekingForward()
-                case .forwardLongPressEnd:
-                    stopSeeking()
-                case .backwardLongPress:
-                    startSeekingBackward()
-                case .backwardLongPressEnd:
-                    stopSeeking()
+        iPlayrController.takeControl { action in
+            switch action {
+            case .menu:
+                if !isFromCoverFlow {
+                    dismiss()
                 }
+            case .select:
+                break
+            case .forwardEndAlt:
+                Task { try? await playerManager.skipToNextTrack() }
+            case .backwardEndAlt:
+                Task { try? await playerManager.skipToPreviousTrack() }
+            case .playPause:
+                Task {
+                    try? await playerManager.togglePlayPause()
+                }
+            case .forwardLongPress:
+                startSeekingForward()
+            case .forwardLongPressEnd:
+                stopSeeking()
+            case .backwardLongPress:
+                startSeekingBackward()
+            case .backwardLongPressEnd:
+                stopSeeking()
             }
-            .store(in: &cancellables)
+        }
     }
 
     private func startSeekingForward() {
@@ -243,11 +222,11 @@ struct SongProgressView: View {
     @EnvironmentObject private var playerManager: AppleMusicManager
     @State private var visualProgress: Double = 0
     @State private var timer: Timer?
-    
+
     private var currentDuration: TimeInterval {
         playerManager.currentTrack?.duration ?? 0
     }
-    
+
     var body: some View {
         HStack(spacing: 0) {
             Text(formattedTime(from: Int(visualProgress * currentDuration)))
@@ -270,7 +249,7 @@ struct SongProgressView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: 18)
             .padding(8)
-            
+
             Text("-\(formattedTime(from: Int(currentDuration - (visualProgress * currentDuration))))")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundColor(.black)
@@ -308,7 +287,7 @@ struct SongProgressView: View {
             }
         }
     }
-    
+
     @MainActor private func startVisualTimer() {
         timer?.invalidate()
         timer = nil
@@ -324,7 +303,7 @@ struct SongProgressView: View {
             }
         }
     }
-    
+
     private func formattedTime(from seconds: Int) -> String {
         let minutes = seconds / 60
         let remainingSeconds = seconds % 60

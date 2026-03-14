@@ -1,6 +1,5 @@
 import SwiftUI
 import MusicKit
-import Combine
 
 struct AlbumsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
@@ -8,13 +7,12 @@ struct AlbumsView: View {
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     @State private var selectedIndex = 0
-    @State private var cancellables = Set<AnyCancellable>()
     @State private var viewState: ViewState = .loading
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: "Albums")
-            
+
             ZStack {
                 if viewState == ViewState.content {
                     albumsScrollView
@@ -28,14 +26,13 @@ struct AlbumsView: View {
         .navigationBarBackButtonHidden()
         .onDisappear {
             iPlayrController.saveCurrentIndex()
-            cancelSubscriptions()
         }
     }
-    
+
     private func loadAlbums() async {
         viewState = .loading
         await albumManager.getCurrentUserSavedAlbums()
-        
+
         if let albums = albumManager.savedAlbums {
             if albums.isEmpty {
                 viewState = .empty(message: "No albums found\nAdd some albums to your library")
@@ -47,7 +44,7 @@ struct AlbumsView: View {
             viewState = .error(message: albumManager.errorMessage ?? "An error occurred\nPlease try again")
         }
     }
-    
+
     @ViewBuilder
     private var albumsScrollView: some View {
         ScrollViewReader { scrollViewProxy in
@@ -69,7 +66,7 @@ struct AlbumsView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private func albumRow(for album: Album, index: Int) -> some View {
         CollectionMenuItem(
@@ -77,16 +74,16 @@ struct AlbumsView: View {
             isSelected: index == selectedIndex
         )
     }
-    
+
     private func setup() {
         iPlayrController.setActivePage(.albums, menuCount: albumManager.savedAlbums?.count ?? 0)
         selectedIndex = iPlayrController.selectedIndex
-        
+
         iPlayrController.takeControl { action in
             handleButtonAction(action)
         }
     }
-    
+
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
         case .menu: dismiss()
@@ -94,15 +91,12 @@ struct AlbumsView: View {
         default: break
         }
     }
-    
+
     private func navigation() {
         iPlayrController.releaseControl()
-        let id = albumManager.savedAlbums?[selectedIndex].id ?? ""
-        let albumName = albumManager.savedAlbums?[selectedIndex].title ?? ""
+        guard let savedAlbums = albumManager.savedAlbums, selectedIndex < savedAlbums.count else { return }
+        let id = savedAlbums[selectedIndex].id
+        let albumName = savedAlbums[selectedIndex].title
         navigate(.push(.albumTracks(id: id.rawValue, albumName: albumName)))
-    }
-    
-    private func cancelSubscriptions() {
-        cancellables.cancelAll()
     }
 }

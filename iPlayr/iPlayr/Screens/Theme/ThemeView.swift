@@ -1,9 +1,7 @@
 import SwiftUI
-import Combine
 
 struct ThemeView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var theme: ThemeManager
     private var menus: [Menu] = [
@@ -30,40 +28,29 @@ struct ThemeView: View {
         .navigationBarBackButtonHidden()
         .onDisappear {
             iPlayrController.saveCurrentIndex()
-            cancelSubscriptions()
         }
     }
-    
+
     private func setup() {
         iPlayrController.setActivePage(.theme, menuCount: menus.count)
         selectedIndex = iPlayrController.selectedIndex
-        setupButtonListener()
-    }
-    
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .theme else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    dismiss()
-                case .select:
-                    setTheme()
-                default:
-                    break
-                }
+
+        iPlayrController.takeControl { action in
+            switch action {
+            case .menu:
+                dismiss()
+            case .select:
+                setTheme()
+            default:
+                break
             }
-            .store(in: &cancellables)
+        }
     }
-    
+
     private func setTheme() {
         withAnimation {
             let themes: [ThemeType] = [.silver, .dark, .u2Edition]
             theme.setTheme(themes[selectedIndex])
         }
-    }
-    
-    private func cancelSubscriptions() {
-        cancellables.cancelAll()
     }
 }
