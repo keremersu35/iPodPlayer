@@ -26,7 +26,10 @@ struct PlaylistTracksView: View {
         .onAppear(perform: setup)
         .task { await loadTracks() }
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            cancelSubscriptions()
+        }
     }
     
     private func loadTracks() async {
@@ -73,30 +76,29 @@ struct PlaylistTracksView: View {
     }
     
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .playlistTracks
-        setupButtonListener()
+        iPlayrController.setActivePage(.playlistTracks, menuCount: playlistManager.tracks?.count ?? 0)
+        selectedIndex = iPlayrController.selectedIndex
+        
+        iPlayrController.takeControl { action in
+            handleButtonAction(action)
+        }
     }
     
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .playlistTracks else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    dismiss()
-                case .select:
-                    let id = collectionInfo.id
-                    navigate(.push(.player(id: id, trackIndex: selectedIndex, isFromPlaylist: true)))
-                default:
-                    break
-                }
-            }
-            .store(in: &cancellables)
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu: dismiss()
+        case .select: navigation()
+        default: break
+        }
+    }
+    
+    private func navigation() {
+        iPlayrController.releaseControl()
+        let id = collectionInfo.id
+        navigate(.push(.player(id: id, trackIndex: selectedIndex, isFromPlaylist: true)))
     }
     
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

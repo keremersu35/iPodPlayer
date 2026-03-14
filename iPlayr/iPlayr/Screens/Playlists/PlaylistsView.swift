@@ -24,7 +24,10 @@ struct PlaylistsView: View {
         .task { await loadPlaylists() }
         .onAppear(perform: setup)
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            cancelSubscriptions()
+        }
     }
     
     private func loadPlaylists() async {
@@ -71,30 +74,30 @@ struct PlaylistsView: View {
     }
     
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .playlists
-        setupButtonListener()
+        iPlayrController.setActivePage(.playlists, menuCount: playlistManager.playlists?.count ?? 0)
+        selectedIndex = iPlayrController.selectedIndex
+        
+        iPlayrController.takeControl { action in
+            handleButtonAction(action)
+        }
     }
     
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .playlists else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu: dismiss()
-                case .select:
-                    let id = playlistManager.playlists?[selectedIndex].id ?? ""
-                    let playlistName = playlistManager.playlists?[selectedIndex].name ?? ""
-                    navigate(.push(.playlistTracks(id: id.rawValue, playlistName: playlistName)))
-                default:
-                    break
-                }
-            }
-            .store(in: &cancellables)
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu: dismiss()
+        case .select: navigation()
+        default: break
+        }
+    }
+    
+    private func navigation() {
+        iPlayrController.releaseControl()
+        let id = playlistManager.playlists?[selectedIndex].id ?? ""
+        let playlistName = playlistManager.playlists?[selectedIndex].name ?? ""
+        navigate(.push(.playlistTracks(id: id.rawValue, playlistName: playlistName)))
     }
     
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

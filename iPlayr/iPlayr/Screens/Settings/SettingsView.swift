@@ -6,8 +6,8 @@ struct SettingsView: View {
     @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
-    private var menus: [Menu] = [ .init(id: 0, name: "Themes", next: true)]
-    @State private var selectedIndex : Int = 0
+    private var menus: [Menu] = [.init(id: 0, name: "Themes", next: true)]
+    @State private var selectedIndex: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,33 +24,34 @@ struct SettingsView: View {
             selectedIndex = newValue
         }
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            cancelSubscriptions()
+        }
     }
     
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .settings
-        iPlayrController.menuCount = menus.count
-        setupButtonListener()
+        iPlayrController.setActivePage(.settings, menuCount: menus.count)
+        selectedIndex = iPlayrController.selectedIndex
+        
+        iPlayrController.takeControl { action in
+            handleButtonAction(action)
+        }
     }
     
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .settings else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    dismiss()
-                case .select:
-                    navigation()
-                default:
-                    break
-                }
-            }
-            .store(in: &cancellables)
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu:
+            dismiss()
+        case .select:
+            navigation()
+        default:
+            break
+        }
     }
     
     private func navigation() {
+        iPlayrController.releaseControl()
         let route: Route
         switch selectedIndex {
         case 0: route = .theme
@@ -60,7 +61,6 @@ struct SettingsView: View {
     }
     
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

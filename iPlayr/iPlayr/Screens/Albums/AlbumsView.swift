@@ -23,12 +23,13 @@ struct AlbumsView: View {
             }
         }
         .shadowedBackground()
-        .task {
-            await loadAlbums()
-        }
+        .task { await loadAlbums() }
         .onAppear(perform: setup)
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            cancelSubscriptions()
+        }
     }
     
     private func loadAlbums() async {
@@ -78,31 +79,30 @@ struct AlbumsView: View {
     }
     
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .albums
-        setupButtonListener()
+        iPlayrController.setActivePage(.albums, menuCount: albumManager.savedAlbums?.count ?? 0)
+        selectedIndex = iPlayrController.selectedIndex
+        
+        iPlayrController.takeControl { action in
+            handleButtonAction(action)
+        }
     }
     
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .albums else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    dismiss()
-                case .select:
-                    let id = albumManager.savedAlbums?[selectedIndex].id ?? ""
-                    let albumName = albumManager.savedAlbums?[selectedIndex].title ?? ""
-                    navigate(.push(.albumTracks(id: id.rawValue, albumName: albumName)))
-                default:
-                    break
-                }
-            }
-            .store(in: &cancellables)
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu: dismiss()
+        case .select: navigation()
+        default: break
+        }
+    }
+    
+    private func navigation() {
+        iPlayrController.releaseControl()
+        let id = albumManager.savedAlbums?[selectedIndex].id ?? ""
+        let albumName = albumManager.savedAlbums?[selectedIndex].title ?? ""
+        navigate(.push(.albumTracks(id: id.rawValue, albumName: albumName)))
     }
     
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

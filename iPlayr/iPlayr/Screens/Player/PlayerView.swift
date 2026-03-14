@@ -7,6 +7,8 @@ struct PlayerView: View {
     @State var trackIndex: Int
     @State var isFromCoverFlow: Bool = false
     @State var isFromPlaylist: Bool = false
+    var initialArtwork: Artwork?
+    @State private var activeArtwork: Artwork?
     @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
@@ -29,22 +31,29 @@ struct PlayerView: View {
             VStack {
                 HStack(spacing: 24) {
                     ZStack {
-                        if let image = playerManager.currentTrack?.artwork {
+                        if let image = activeArtwork {
                             ArtworkImage(image, width: 150)
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 150, height: 150)
                                 .reflection()
                                 .rotation3DEffect(.degrees(currentDegree), axis: (x: 0, y: 1, z: 0))
-                                .scaleEffect(isScaleAnimation ? 2 : 1 )
+                                .scaleEffect(isScaleAnimation ? 1.2 : 1 )
                                 .id(playerManager.currentTrack?.title ?? "")
                                 .onAppear {
                                     if isFromCoverFlow {
-                                        withAnimation(.snappy(duration: 0.6)) {
-                                            isScaleAnimation = false
-                                            currentDegree = 5
+                                        isScaleAnimation = true
+                                        currentDegree = 80
+                                        currentOpacity = 0
+                                        
+                                        DispatchQueue.main.async {
+                                            withAnimation(.snappy(duration: 0.6)) {
+                                                isScaleAnimation = false
+                                                currentDegree = 5
+                                            }
                                         }
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                        
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            withAnimation(.easeInOut(duration: 0.4)) {
                                                 currentOpacity = 1
                                             }
                                         }
@@ -52,6 +61,11 @@ struct PlayerView: View {
                                         isScaleAnimation = false
                                         currentDegree = 5
                                         currentOpacity = 1
+                                    }
+                                }
+                                .onChange(of: playerManager.currentTrack) { _, newValue in
+                                    if let newArtwork = newValue?.artwork {
+                                        activeArtwork = newArtwork
                                     }
                                 }
                         } else {
@@ -92,6 +106,11 @@ struct PlayerView: View {
         .background(Color.white)
         .frame(maxHeight: .infinity)
         .onAppear {
+            if let artwork = initialArtwork {
+                activeArtwork = artwork
+            } else {
+                activeArtwork = playerManager.currentTrack?.artwork
+            }
             iPlayrController.activePage = .player
             setupButtonListener()
             Task {
@@ -171,7 +190,7 @@ struct PlayerView: View {
         seekTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             Task {
                 await updateSeekSpeed()
-                try? await playerManager.seekForward(seconds: currentSeekSpeed)
+                await playerManager.seekForward(seconds: currentSeekSpeed)
             }
         }
     }
@@ -185,7 +204,7 @@ struct PlayerView: View {
         seekTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             Task {
                 await updateSeekSpeed()
-                try? await playerManager.seekBackward(seconds: currentSeekSpeed)
+                await playerManager.seekBackward(seconds: currentSeekSpeed)
             }
         }
     }

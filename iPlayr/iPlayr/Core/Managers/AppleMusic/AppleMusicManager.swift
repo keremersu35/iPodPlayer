@@ -90,11 +90,9 @@ final class AppleMusicManager: ObservableObject {
     private func setupSongObserver() {
         musicPlayer.state.objectWillChange
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                Task { [weak self] in
-                    guard let self else { return }
-                    await updatePlayerState()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    await self?.updatePlayerState()
                 }
             }
             .store(in: &cancellables)
@@ -127,14 +125,14 @@ final class AppleMusicManager: ObservableObject {
         }
     }
 
-    func seekForward(seconds: Double = 5.0) async throws {
+    func seekForward(seconds: Double = 5.0) {
         let currentTime = musicPlayer.playbackTime
         guard let duration = currentTrack?.duration else { return }
         let newTime = min(currentTime + seconds, duration)
         musicPlayer.playbackTime = newTime
     }
 
-    func seekBackward(seconds: Double = 5.0) async throws {
+    func seekBackward(seconds: Double = 5.0) {
         let currentTime = musicPlayer.playbackTime
         let newTime = max(currentTime - seconds, 0.0)
         musicPlayer.playbackTime = newTime
@@ -145,7 +143,7 @@ final class AppleMusicManager: ObservableObject {
     }
 }
 
-enum MusicPlayerError: LocalizedError {
+enum MusicPlayerError: LocalizedError, Sendable {
     case noTrackSelected
     case albumNotFound
     case playlistNotFound

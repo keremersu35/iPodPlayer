@@ -11,7 +11,7 @@ struct ThemeView: View {
         .init(id: 1, name: "Black", next: false),
         .init(id: 2, name: "U2 Edition", next: false),
     ]
-    @State private var selectedIndex : Int = 0
+    @State private var selectedIndex: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -28,13 +28,15 @@ struct ThemeView: View {
             selectedIndex = newValue
         }
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            cancelSubscriptions()
+        }
     }
     
     private func setup() {
-        iPlayrController.activePage = .theme
-        iPlayrController.menuCount = menus.count
-        iPlayrController.selectedIndex = selectedIndex
+        iPlayrController.setActivePage(.theme, menuCount: menus.count)
+        selectedIndex = iPlayrController.selectedIndex
         setupButtonListener()
     }
     
@@ -54,7 +56,7 @@ struct ThemeView: View {
             .store(in: &cancellables)
     }
     
-    func setTheme() {
+    private func setTheme() {
         withAnimation {
             let themes: [ThemeType] = [.silver, .dark, .u2Edition]
             theme.setTheme(themes[selectedIndex])
@@ -62,7 +64,6 @@ struct ThemeView: View {
     }
     
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

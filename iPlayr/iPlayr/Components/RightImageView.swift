@@ -3,6 +3,7 @@ import MusicKit
 import Combine
 
 struct RightImageView: View {
+    @EnvironmentObject private var authManager: MusicAuthorizationManager
     @StateObject private var albumManager = AlbumManager()
     @State private var currentImageIndex = 0
     @State private var timerCancellable: AnyCancellable?
@@ -16,7 +17,7 @@ struct RightImageView: View {
             Color.blue.opacity(0.3)
                 .ignoresSafeArea()
 
-            if MusicAuthorization.currentStatus != .authorized {
+            if !authManager.isAuthorized {
                 unauthorizedView
             } else if let images = albumManager.savedAlbums?.compactMap({ $0.artwork }),
                       !images.isEmpty {
@@ -25,19 +26,28 @@ struct RightImageView: View {
                 noMusicView
             }
         }
-        .task { await albumManager.getCurrentUserSavedAlbums() }
+        .task { await loadAlbumsIfAuthorized() }
+        .onChange(of: authManager.isAuthorized) { _, isAuthorized in
+            if isAuthorized {
+                Task { await loadAlbumsIfAuthorized() }
+            }
+        }
         .onReceive(albumManager.$savedAlbums) { albums in
             guard !(albums?.isEmpty ?? true) else { return }
             startImageCycle()
         }
         .onDisappear(perform: stopImageCycle)
     }
+    
+    private func loadAlbumsIfAuthorized() async {
+        guard authManager.isAuthorized else { return }
+        await albumManager.getCurrentUserSavedAlbums()
+    }
 
     private var unauthorizedView: some View {
         VStack {
             Image(systemName: "applelogo")
-                .resizable()
-                .frame(width: 60, height: 60)
+                .font(.system(size: 60))
             Spacer().frame(height: 16)
             Text("Please sign in to Apple Music")
                 .foregroundColor(.white)

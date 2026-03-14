@@ -11,7 +11,7 @@ struct MusicListView: View {
         .init(id: 1, name: "Playlists", next: true),
         .init(id: 2, name: "Albums", next: true),
     ]
-    @State private var selectedIndex : Int = 0
+    @State private var selectedIndex: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,40 +24,52 @@ struct MusicListView: View {
         .shadowedBackground()
         .onAppear(perform: setup)
         .onChange(of: iPlayrController.selectedIndex) { _, newValue in
+            // Sadece kontrol bizdeyse güncelle
             guard iPlayrController.activePage == .music else { return }
             selectedIndex = newValue
         }
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
-    }
-    
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .music else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    dismiss()
-                case .select:
-                    navigation()
-                default: break
-                }
-            }
-            .store(in: &cancellables)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            // View kapanınca kontrolü bırak (Eğer hala bizdeyse)
+            // Ama genellikle yeni view almış olur, o yüzden zararsız
+            // iPlayrController.releaseControl() 
+        }
     }
     
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.hasRightView = true
-        iPlayrController.activePage = .music
-        iPlayrController.menuCount = menus.count
-        setupButtonListener()
+        iPlayrController.setActivePage(.music, menuCount: menus.count)
+        selectedIndex = iPlayrController.selectedIndex
+        
+        // EXCLUSIVE CONTROL: Tek yetkili handler ol
+        iPlayrController.takeControl { action in
+            handleButtonAction(action)
+        }
+    }
+    
+    // Eski sink yapısı yerine doğrudan fonksiyon çağrısı
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu:
+            dismiss()
+        case .select:
+            navigation()
+        default: break
+        }
     }
     
     private func navigation() {
+        // Navigasyon başladığı an kontrolü bırak (Sağır ol)
+        iPlayrController.releaseControl()
+        
+        // Guard'a gerek kalmadı çünkü artık input almayacağız ama güvenlik için kalsın
         guard iPlayrController.activePage == .music else { return }
+        
+        if selectedIndex == 0 { // CoverFlow
+             iPlayrController.setRightView(false)
+        }
+        
         let route: Route
-        iPlayrController.hasRightView = false
         switch selectedIndex {
         case 0: route = .coverFlow
         case 1: route = .playlists
@@ -65,10 +77,5 @@ struct MusicListView: View {
         default: route = .playlists
         }
         navigate(.push(route))
-    }
-    
-    private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
     }
 }

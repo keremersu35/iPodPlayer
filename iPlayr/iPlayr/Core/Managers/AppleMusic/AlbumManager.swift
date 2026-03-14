@@ -15,9 +15,7 @@ final class AlbumManager: ObservableObject {
     func getAlbumTracks(id: String) async {
         do {
             let tracks = try await albumRepository.getAlbumTracks(id: id)
-            await MainActor.run {
-                savedAlbumsTracks = tracks ?? []
-            }
+            savedAlbumsTracks = tracks ?? []
         } catch {
             errorMessage = "Request failed with error: \(error.localizedDescription)"
         }
@@ -27,10 +25,10 @@ final class AlbumManager: ObservableObject {
         do {
             let albums = try await albumRepository.getCurrentUserSavedAlbums()
             if let albums {
-                await MainActor.run {
-                    savedAlbums = albums
-                }
-            } else { errorMessage = "Data cannot be fetched" }
+                savedAlbums = albums
+            } else {
+                errorMessage = "Data cannot be fetched"
+            }
         } catch {
             errorMessage = "Request failed with error: \(error.localizedDescription)"
         }

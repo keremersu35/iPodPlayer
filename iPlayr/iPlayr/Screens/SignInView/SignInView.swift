@@ -4,6 +4,7 @@ import Combine
 
 struct SignInView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
+    @EnvironmentObject private var authManager: MusicAuthorizationManager
     @State private var cancellables = Set<AnyCancellable>()
     @Environment(\.dismiss) private var dismiss
     @State private var isShowingModal = false
@@ -39,9 +40,8 @@ struct SignInView: View {
     }
 
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .login
-        iPlayrController.menuCount = menus.count
+        iPlayrController.setActivePage(.login, menuCount: menus.count)
+        selectedIndex = iPlayrController.selectedIndex
         setupButtonListener()
     }
 
@@ -53,19 +53,26 @@ struct SignInView: View {
                 case .menu:
                     dismiss()
                 case .select:
-                    Task {
-                        let status = MusicAuthorization.currentStatus
-                        if status == .denied {
-                            isShowingModal = true
-                        } else {
-                            _ = await MusicAuthorization.request()
-                        }
-                    }
+                    Task { await handleAppleMusicSignIn() }
                 default:
                     break
                 }
             }
             .store(in: &cancellables)
+    }
+    
+    private func handleAppleMusicSignIn() async {
+        let status = authManager.authorizationStatus
+        
+        if status == .denied {
+            isShowingModal = true
+            return
+        }
+        
+        let granted = await authManager.requestAuthorization()
+        if granted {
+            dismiss()
+        }
     }
 
     private func openAppSettings() {
@@ -75,7 +82,6 @@ struct SignInView: View {
     }
 
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

@@ -26,7 +26,10 @@ struct AlbumTracksView: View {
         .onAppear(perform: setup)
         .task { await loadTracks() }
         .navigationBarBackButtonHidden()
-        .onDisappear(perform: cancelSubscriptions)
+        .onDisappear {
+            iPlayrController.saveCurrentIndex()
+            cancelSubscriptions()
+        }
     }
     
     private func loadTracks() async {
@@ -76,30 +79,29 @@ struct AlbumTracksView: View {
     }
 
     private func setup() {
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.activePage = .albumTracks
-        setupButtonListener()
+        iPlayrController.setActivePage(.albumTracks, menuCount: albumManager.savedAlbumsTracks?.count ?? 0)
+        selectedIndex = iPlayrController.selectedIndex
+        
+        iPlayrController.takeControl { action in
+            handleButtonAction(action)
+        }
     }
     
-    private func setupButtonListener() {
-        guard iPlayrController.activePage == .albumTracks else { return }
-        iPlayrController.buttonPressed
-            .sink { action in
-                switch action {
-                case .menu:
-                    dismiss()
-                case .select:
-                    let id = collectionInfo.id
-                    navigate(.push(.player(id: id, trackIndex: selectedIndex)))
-                default:
-                    break
-                }
-            }
-            .store(in: &cancellables)
+    private func handleButtonAction(_ action: ButtonAction) {
+        switch action {
+        case .menu: dismiss()
+        case .select: navigation()
+        default: break
+        }
+    }
+    
+    private func navigation() {
+        iPlayrController.releaseControl()
+        let id = collectionInfo.id
+        navigate(.push(.player(id: id, trackIndex: selectedIndex)))
     }
     
     private func cancelSubscriptions() {
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
+        cancellables.cancelAll()
     }
 }

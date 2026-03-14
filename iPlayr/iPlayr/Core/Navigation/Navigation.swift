@@ -1,12 +1,12 @@
 import Foundation
 import SwiftUI
 
-enum NavigationType: Hashable {
+enum NavigationType: Hashable, Sendable {
     case push(Route)
 }
 
-struct NavigateAction {
-    typealias Action = (NavigationType) -> ()
+struct NavigateAction: Sendable {
+    typealias Action = @Sendable (NavigationType) -> ()
     let action: Action
     
     func callAsFunction(_ navigationType: NavigationType) {
@@ -15,7 +15,7 @@ struct NavigateAction {
 }
 
 struct NavigationEnvironmentKey: EnvironmentKey {
-    nonisolated(unsafe) static var defaultValue: NavigateAction = NavigateAction(action: { _ in })
+    static let defaultValue: NavigateAction = NavigateAction(action: { _ in })
 }
 
 extension EnvironmentValues {
@@ -25,7 +25,7 @@ extension EnvironmentValues {
     }
 }
 
-enum Route: Hashable, Identifiable {
+enum Route: Hashable, Identifiable, Sendable {
     case music
     case home
     case playlists

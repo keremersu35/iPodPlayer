@@ -1,6 +1,7 @@
 import Foundation
 import MusicKit
 
+@MainActor
 final class PlaylistRepositoryImpl: PlaylistRepositoryProtocol {
 
     func currentUserPlaylist() async throws -> MusicItemCollection<Playlist>? {
