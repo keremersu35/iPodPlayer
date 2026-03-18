@@ -95,16 +95,17 @@ struct CoverFlowView: View {
     }
 
     private var albumInfo: some View {
-        VStack(spacing: 2) {
+        let album = albums.indices.contains(selectedIndex) ? albums[selectedIndex] : nil
+        return VStack(spacing: 2) {
             Spacer()
-            Text(albums[selectedIndex].title)
+            Text(album?.title ?? "")
                 .font(.system(size: 16, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.black)
                 .lineLimit(1)
                 .id("title-\(selectedIndex)")
                 .transition(.opacity)
-            Text(albums[selectedIndex].artistName)
+            Text(album?.artistName ?? "")
                 .font(.system(size: 16, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.black)

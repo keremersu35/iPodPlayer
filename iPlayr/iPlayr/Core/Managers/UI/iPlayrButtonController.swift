@@ -1,4 +1,6 @@
 import Foundation
+import UIKit
+import AudioToolbox
 
 enum ButtonAction: Sendable {
     case menu, forwardEndAlt, backwardEndAlt, playPause, select
@@ -28,6 +30,9 @@ final class iPlayrButtonController: ObservableObject {
     private var activeInputHandler: ((ButtonAction) -> Void)?
     private var globalPlaybackHandler: ((ButtonAction) -> Void)?
 
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+
     func takeControl(handler: @escaping (ButtonAction) -> Void) {
         self.activeInputHandler = handler
     }
@@ -50,6 +55,12 @@ final class iPlayrButtonController: ObservableObject {
         if action == .menu || action == .select {
             guard now.timeIntervalSince(lastInteractionTime) > debounceInterval else { return }
             lastInteractionTime = now
+            if UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true {
+                impactFeedback.impactOccurred()
+            }
+            if UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true {
+                AudioServicesPlaySystemSound(1306)
+            }
         }
 
         activeInputHandler?(action)
@@ -76,18 +87,18 @@ final class iPlayrButtonController: ObservableObject {
     func backwardLongPressEnded() { handleInput(.backwardLongPressEnd) }
 
     func scrollUp() {
-        if selectedIndex > 0 {
-            selectedIndex -= 1
-        } else {
-            selectedIndex = menuCount - 1
+        guard menuCount > 0 else { return }
+        selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : menuCount - 1
+        if UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true {
+            selectionFeedback.selectionChanged()
         }
     }
 
     func scrollDown() {
-        if selectedIndex < menuCount - 1 {
-            selectedIndex += 1
-        } else {
-            selectedIndex = 0
+        guard menuCount > 0 else { return }
+        selectedIndex = selectedIndex < menuCount - 1 ? selectedIndex + 1 : 0
+        if UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true {
+            selectionFeedback.selectionChanged()
         }
     }
 

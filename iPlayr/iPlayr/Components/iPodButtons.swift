@@ -13,12 +13,7 @@ struct iPlayrButtons: View {
             
             ZStack {
                 Circle()
-                    .fill(RadialGradient(
-                        gradient: Gradient(colors: [theme.currentTheme.wheelColor]),
-                        center: .center,
-                        startRadius: 10,
-                        endRadius: size * 0.4
-                    ))
+                    .fill(theme.currentTheme.wheelColor)
                     .frame(width: size * 0.79, height: size * 0.79)
                     .gesture(dragGesture(in: size))
 

@@ -48,7 +48,7 @@ struct AlbumCover: View {
             .frame(width: 300, height: 280)
             .background(Color.white)
             .border(.gray)
-            .offset(y: 40)
+            .offset(y: 35)
             .modifier(FlipOpacity(pct: isFaceUp ? 1 : 0))
             .rotation3DEffect(.degrees(isFaceUp ? 0 : 180), axis: (0, 1, 0))
             .scaleEffect(isFaceUp ? 1 : 160 / 300)

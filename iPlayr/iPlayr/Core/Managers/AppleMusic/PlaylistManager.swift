@@ -14,6 +14,7 @@ final class PlaylistManager: ObservableObject {
     }
     
     func fetchPlaylists() async {
+        guard playlists == nil else { return }
         do {
             let playlists = try await playlistRepository.currentUserPlaylist()
             self.playlists = playlists ?? []

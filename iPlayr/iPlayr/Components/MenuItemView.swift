@@ -4,6 +4,7 @@ struct Menu: Identifiable, Equatable {
     let id: Int
     let name: String
     let next: Bool
+    var value: String? = nil
 }
 
 struct MenuItemView: View {
@@ -17,7 +18,11 @@ struct MenuItemView: View {
                 .fontWeight(.bold)
                 .lineLimit(1)
             Spacer()
-            if menu.next && isSelected {
+            if let value = menu.value {
+                Text(value)
+                    .font(.system(size: 14))
+                    .foregroundStyle(isSelected ? .white : .blue)
+            } else if menu.next && isSelected {
                 Image(systemName: ImageNames.System.chevronRight)
                     .font(.system(size: 14, weight: .heavy))
             }

@@ -56,16 +56,14 @@ struct MusicListView: View {
         guard iPlayrController.activePage == .music else { return }
 
         let route: Route
-        let targetPage: Page
         switch selectedIndex {
-        case 0: route = .coverFlow;  targetPage = .coverFlow
-        case 1: route = .playlists;  targetPage = .playlists
-        case 2: route = .albums;     targetPage = .albums
-        default: route = .playlists; targetPage = .playlists
+        case 0: route = .coverFlow
+        case 1: route = .playlists
+        case 2: route = .albums
+        default: route = .playlists
         }
 
         iPlayrController.saveCurrentIndex()
-        iPlayrController.activePage = targetPage
         DispatchQueue.main.async { navigate(.push(route)) }
     }
 }

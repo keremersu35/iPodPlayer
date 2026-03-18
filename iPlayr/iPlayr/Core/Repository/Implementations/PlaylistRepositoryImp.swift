@@ -18,8 +18,9 @@ final class PlaylistRepositoryImpl: PlaylistRepositoryProtocol {
     }
     
     private func fetchPlaylist(id: String) async throws -> Playlist? {
-        let request = MusicLibraryRequest<Playlist>()
+        var request = MusicLibraryRequest<Playlist>()
+        request.filter(matching: \.id, equalTo: MusicItemID(id))
         let response = try await request.response()
-        return response.items.first { $0.id.rawValue == id }
+        return response.items.first
     }
 }

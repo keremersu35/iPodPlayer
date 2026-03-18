@@ -2,10 +2,10 @@ import SwiftUI
 import MusicKit
 
 struct PlayerView: View {
-    @State var id: String
-    @State var trackIndex: Int
-    @State var isFromCoverFlow: Bool = false
-    @State var isFromPlaylist: Bool = false
+    let id: String
+    let trackIndex: Int
+    let isFromCoverFlow: Bool
+    let isFromPlaylist: Bool
     var initialArtwork: Artwork?
     var onDismissFromCoverFlow: (() -> Void)? = nil
     @State private var activeArtwork: Artwork?

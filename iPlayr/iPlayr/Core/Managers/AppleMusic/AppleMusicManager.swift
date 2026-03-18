@@ -20,10 +20,11 @@ final class AppleMusicManager: ObservableObject {
 
     func playAlbum(id: String, fromIndex: Int = 0) async throws {
         currentTrack = nil
-        let request = MusicLibraryRequest<Album>()
+        var request = MusicLibraryRequest<Album>()
+        request.filter(matching: \.id, equalTo: MusicItemID(id))
         let response = try await request.response()
 
-        guard let album = response.items.first(where: { $0.id.rawValue == id }) else {
+        guard let album = response.items.first else {
             throw MusicPlayerError.albumNotFound
         }
 
@@ -46,10 +47,11 @@ final class AppleMusicManager: ObservableObject {
 
     func playPlaylist(id: String, fromIndex: Int = 0) async throws {
         currentTrack = nil
-        let request = MusicLibraryRequest<Playlist>()
+        var request = MusicLibraryRequest<Playlist>()
+        request.filter(matching: \.id, equalTo: MusicItemID(id))
         let response = try await request.response()
 
-        guard let playlist = response.items.first(where: { $0.id.rawValue == id }) else {
+        guard let playlist = response.items.first else {
             throw MusicPlayerError.playlistNotFound
         }
 
@@ -123,6 +125,9 @@ final class AppleMusicManager: ObservableObject {
         case .paused:
             isPlaying = false
             isPaused = true
+        case .stopped, .interrupted:
+            isPlaying = false
+            isPaused = false
         default:
             break
         }

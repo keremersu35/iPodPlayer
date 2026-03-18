@@ -22,6 +22,7 @@ final class AlbumManager: ObservableObject {
     }
 
     func getCurrentUserSavedAlbums() async {
+        guard savedAlbums == nil else { return }
         do {
             let albums = try await albumRepository.getCurrentUserSavedAlbums()
             if let albums {
