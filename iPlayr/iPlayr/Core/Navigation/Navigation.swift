@@ -6,9 +6,10 @@ enum NavigationType: Hashable, Sendable {
 }
 
 struct NavigateAction: Sendable {
-    typealias Action = @Sendable (NavigationType) -> ()
+    typealias Action = @MainActor @Sendable (NavigationType) -> ()
     let action: Action
-    
+
+    @MainActor
     func callAsFunction(_ navigationType: NavigationType) {
         action(navigationType)
     }

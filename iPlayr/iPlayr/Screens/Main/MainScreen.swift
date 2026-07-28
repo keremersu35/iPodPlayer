@@ -11,11 +11,9 @@ struct iPlayrView: View {
             iPlayrScreen()
                 .environmentObject(iPlayrController)
                 .padding(.horizontal)
-                .environmentObject(theme)
             Spacer()
             iPlayrButtons()
                 .environmentObject(iPlayrController)
-                .environmentObject(theme)
             Spacer()
         }
         .background(

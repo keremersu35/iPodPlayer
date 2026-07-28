@@ -89,8 +89,9 @@ struct PlaylistsView: View {
     
     private func navigation() {
         iPlayrController.releaseControl()
-        let id = playlistManager.playlists?[selectedIndex].id ?? ""
-        let playlistName = playlistManager.playlists?[selectedIndex].name ?? ""
+        guard let playlists = playlistManager.playlists, selectedIndex < playlists.count else { return }
+        let id = playlists[selectedIndex].id
+        let playlistName = playlists[selectedIndex].name
         navigate(.push(.playlistTracks(id: id.rawValue, playlistName: playlistName)))
     }
     

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StatusBar: View {
     @EnvironmentObject private var playerManager: AppleMusicManager
+    @EnvironmentObject private var batteryMonitor: BatteryMonitor
     var title: String
     
     var body: some View {
@@ -19,7 +20,7 @@ struct StatusBar: View {
                     Spacer()
                         .frame(width: 8)
                 }
-                BatteryIconView(level: CGFloat(UIDevice.current.batteryLevel))
+                BatteryIconView(level: CGFloat(batteryMonitor.level))
                     .frame(width: 28, height: 14)
             }
             .padding(.horizontal, 8)

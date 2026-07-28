@@ -1,9 +1,9 @@
 import SwiftUI
 
-struct FlipOpacity: @preconcurrency AnimatableModifier {
+struct FlipOpacity: ViewModifier, Animatable {
    var pct: CGFloat = 0
 
-   var animatableData: CGFloat {
+   nonisolated var animatableData: CGFloat {
       get { pct }
       set { pct = newValue }
    }

@@ -91,16 +91,14 @@ struct SongListView: View {
     private func loadTracks() {
         Task {
             await albumManager.getAlbumTracks(id: album.id.rawValue)
-            await updateControllerIfNeeded()
-            await MainActor.run { isLoading = false }
+            updateControllerIfNeeded()
+            isLoading = false
         }
     }
 
-    private func updateControllerIfNeeded() async {
-        await MainActor.run {
-            guard iPlayrController.activePage == .coverFlowSongList else { return }
-            iPlayrController.menuCount = tracks.count
-        }
+    private func updateControllerIfNeeded() {
+        guard iPlayrController.activePage == .coverFlowSongList else { return }
+        iPlayrController.menuCount = tracks.count
     }
 
     private func cleanup() {

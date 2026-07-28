@@ -152,7 +152,6 @@ final class AppleMusicManager: ObservableObject {
 }
 
 enum MusicPlayerError: LocalizedError, Sendable {
-    case noTrackSelected
     case albumNotFound
     case playlistNotFound
     case trackNotFound
@@ -160,8 +159,6 @@ enum MusicPlayerError: LocalizedError, Sendable {
 
     var errorDescription: String? {
         switch self {
-        case .noTrackSelected:
-            return "No track is currently selected."
         case .albumNotFound:
             return "The specified album could not be found."
         case .playlistNotFound:

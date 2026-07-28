@@ -1,20 +1,22 @@
 import SwiftUI
 
 struct iPlayrButtons: View {
-    @State private var lastAngle: CGFloat = 0
+    private static let wheelDiameterRatio: CGFloat = 0.79
+
+    @State private var lastAngle: CGFloat?
     @State private var counter: CGFloat = 0
     @EnvironmentObject private var buttonController: iPlayrButtonController
     @EnvironmentObject private var theme: ThemeManager
-    
+
     var body: some View {
         GeometryReader { geometry in
             let size = geometry.size.width
             let buttonOffset = size * 0.32
-            
+
             ZStack {
                 Circle()
                     .fill(theme.currentTheme.wheelColor)
-                    .frame(width: size * 0.79, height: size * 0.79)
+                    .frame(width: size * Self.wheelDiameterRatio, height: size * Self.wheelDiameterRatio)
                     .gesture(dragGesture(in: size))
 
                 Image(theme.currentTheme.wheelInnerAppearance)
@@ -38,25 +40,36 @@ struct iPlayrButtons: View {
     }
     
     private func dragGesture(in size: CGFloat) -> some Gesture {
-        DragGesture()
+        let center = size * Self.wheelDiameterRatio / 2
+        return DragGesture()
             .onChanged { v in
-                var angle = atan2(v.location.x - size * 0.4, size * 0.4 - v.location.y) * 180 / .pi
+                var angle = atan2(v.location.x - center, center - v.location.y) * 180 / .pi
                 if angle < 0 { angle += 360 }
-                
-                let theta = lastAngle - angle
+
+                guard let previousAngle = lastAngle else {
+                    lastAngle = angle
+                    return
+                }
+
+                var theta = previousAngle - angle
+                if theta > 180 { theta -= 360 }
+                if theta < -180 { theta += 360 }
                 lastAngle = angle
-                
-                if abs(theta) < 30 { counter += theta }
-                
-                if counter > 30 && buttonController.selectedIndex > 0 {
+
+                counter += theta
+
+                if counter > 30 {
                     buttonController.scrollUp()
-                } else if counter < -30 && buttonController.selectedIndex < buttonController.menuCount - 1 {
+                } else if counter < -30 {
                     buttonController.scrollDown()
                 }
-                
+
                 if abs(counter) > 30 { counter = 0 }
             }
-            .onEnded { _ in counter = 0 }
+            .onEnded { _ in
+                lastAngle = nil
+                counter = 0
+            }
     }
     
     @ViewBuilder

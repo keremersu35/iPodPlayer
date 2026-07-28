@@ -62,7 +62,7 @@ struct AlbumsView: View {
                     scrollViewProxy.scrollTo(newIndex)
                 }
             } else {
-                Text("No albums found")
+                EmptyView()
             }
         }
     }

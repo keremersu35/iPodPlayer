@@ -33,6 +33,37 @@ final class iPlayrButtonController: ObservableObject {
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
 
+    private var hapticsEnabled: Bool
+    private var soundsEnabled: Bool
+    private nonisolated(unsafe) var settingsObserver: NSObjectProtocol?
+
+    init() {
+        hapticsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true
+        soundsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true
+        selectionFeedback.prepare()
+        impactFeedback.prepare()
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.refreshCachedSettings()
+            }
+        }
+    }
+
+    deinit {
+        if let settingsObserver {
+            NotificationCenter.default.removeObserver(settingsObserver)
+        }
+    }
+
+    private func refreshCachedSettings() {
+        hapticsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true
+        soundsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true
+    }
+
     func takeControl(handler: @escaping (ButtonAction) -> Void) {
         self.activeInputHandler = handler
     }
@@ -55,10 +86,11 @@ final class iPlayrButtonController: ObservableObject {
         if action == .menu || action == .select {
             guard now.timeIntervalSince(lastInteractionTime) > debounceInterval else { return }
             lastInteractionTime = now
-            if UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true {
+            if hapticsEnabled {
                 impactFeedback.impactOccurred()
+                impactFeedback.prepare()
             }
-            if UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true {
+            if soundsEnabled {
                 AudioServicesPlaySystemSound(1306)
             }
         }
@@ -89,16 +121,18 @@ final class iPlayrButtonController: ObservableObject {
     func scrollUp() {
         guard menuCount > 0 else { return }
         selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : menuCount - 1
-        if UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true {
+        if hapticsEnabled {
             selectionFeedback.selectionChanged()
+            selectionFeedback.prepare()
         }
     }
 
     func scrollDown() {
         guard menuCount > 0 else { return }
         selectedIndex = selectedIndex < menuCount - 1 ? selectedIndex + 1 : 0
-        if UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true {
+        if hapticsEnabled {
             selectionFeedback.selectionChanged()
+            selectionFeedback.prepare()
         }
     }
 
@@ -106,7 +140,8 @@ final class iPlayrButtonController: ObservableObject {
         saveCurrentIndex()
         activePage = page
         self.menuCount = menuCount
-        selectedIndex = savedIndices[page] ?? 0
+        let restoredIndex = savedIndices[page] ?? 0
+        selectedIndex = menuCount > 0 ? min(restoredIndex, menuCount - 1) : 0
     }
 
     func saveCurrentIndex() {

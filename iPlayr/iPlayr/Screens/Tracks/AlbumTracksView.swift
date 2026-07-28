@@ -49,7 +49,7 @@ struct AlbumTracksView: View {
     private var tracksScrollView: some View {
         ScrollViewReader { scrollViewProxy in
             ScrollView {
-                VStack(spacing: 0) {
+                LazyVStack(spacing: 0) {
                     let savedTracks = albumManager.savedAlbumsTracks?.compactMap { $0 } ?? []
                     let indexedTracks = Array(savedTracks.enumerated())
                     

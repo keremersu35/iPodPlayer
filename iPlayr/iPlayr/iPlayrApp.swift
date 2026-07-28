@@ -5,6 +5,7 @@ struct iPlayrApp: App {
     @StateObject var theme: ThemeManager = .init()
     @StateObject private var playerManager = AppleMusicManager()
     @StateObject private var authManager = MusicAuthorizationManager()
+    @StateObject private var batteryMonitor = BatteryMonitor()
 
     init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -16,6 +17,7 @@ struct iPlayrApp: App {
                 .environmentObject(theme)
                 .environmentObject(playerManager)
                 .environmentObject(authManager)
+                .environmentObject(batteryMonitor)
         }
     }
 }
