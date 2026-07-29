@@ -7,10 +7,6 @@ struct iPlayrApp: App {
     @StateObject private var authManager = MusicAuthorizationManager()
     @StateObject private var batteryMonitor = BatteryMonitor()
 
-    init() {
-        UIDevice.current.isBatteryMonitoringEnabled = true
-    }
-
     var body: some Scene {
         WindowGroup {
             iPlayrView()

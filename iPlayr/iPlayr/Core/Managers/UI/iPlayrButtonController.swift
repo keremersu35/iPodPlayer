@@ -33,35 +33,12 @@ final class iPlayrButtonController: ObservableObject {
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
 
-    private var hapticsEnabled: Bool
-    private var soundsEnabled: Bool
-    private nonisolated(unsafe) var settingsObserver: NSObjectProtocol?
+    private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true }
+    private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true }
 
     init() {
-        hapticsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true
-        soundsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true
         selectionFeedback.prepare()
         impactFeedback.prepare()
-        settingsObserver = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.refreshCachedSettings()
-            }
-        }
-    }
-
-    deinit {
-        if let settingsObserver {
-            NotificationCenter.default.removeObserver(settingsObserver)
-        }
-    }
-
-    private func refreshCachedSettings() {
-        hapticsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true
-        soundsEnabled = UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true
     }
 
     func takeControl(handler: @escaping (ButtonAction) -> Void) {
