@@ -6,7 +6,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
-    @State private var selectedIndex: Int = 0
+    @StateObject private var scope = FocusScope(id: "settings", showsRightView: true)
 
     private var menus: [Menu] {
         [
@@ -20,29 +20,19 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: "Settings")
             ForEach(menus.indices, id: \.self) { index in
-                MenuItemView(menu: menus[index], isSelected: selectedIndex == index)
+                MenuItemView(menu: menus[index], isSelected: scope.selection == index)
             }
             Spacer()
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .onChange(of: iPlayrController.selectedIndex) { _, newValue in
-            guard iPlayrController.activePage == .settings else { return }
-            selectedIndex = newValue
-        }
         .navigationBarBackButtonHidden()
-        .onDisappear {
-            iPlayrController.saveCurrentIndex()
-        }
     }
 
     private func setup() {
-        iPlayrController.setActivePage(.settings, menuCount: menus.count)
-        selectedIndex = iPlayrController.selectedIndex
-
-        iPlayrController.takeControl { action in
-            handleButtonAction(action)
-        }
+        scope.configure(itemCount: menus.count)
+        scope.onAction = { handleButtonAction($0) }
+        iPlayrController.activate(scope)
     }
 
     private func handleButtonAction(_ action: ButtonAction) {
@@ -57,9 +47,8 @@ struct SettingsView: View {
     }
 
     private func handleSelect() {
-        switch selectedIndex {
+        switch scope.selection {
         case 0:
-            iPlayrController.releaseControl()
             navigate(.push(.theme))
         case 1:
             hapticsEnabled.toggle()

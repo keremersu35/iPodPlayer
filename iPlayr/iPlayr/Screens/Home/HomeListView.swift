@@ -5,7 +5,8 @@ struct HomeListView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var authManager: MusicAuthorizationManager
     @Environment(\.navigate) private var navigate
-    
+    @StateObject private var scope = FocusScope(id: "home", showsRightView: true)
+
     private var menus: [Menu] {
         var baseMenus: [Menu] = [
             .init(id: 0, name: "Music", next: true),
@@ -16,45 +17,32 @@ struct HomeListView: View {
         }
         return baseMenus
     }
-    
-    @State private var selectedIndex: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: "iPlayr")
             ForEach(menus.indices, id: \.self) { index in
-                MenuItemView(menu: menus[index], isSelected: selectedIndex == index)
+                MenuItemView(menu: menus[index], isSelected: scope.selection == index)
             }
             Spacer()
         }
         .shadowedBackground()
         .navigationBarBackButtonHidden()
         .onAppear(perform: setup)
-        .onChange(of: iPlayrController.selectedIndex) { _, newValue in
-            guard iPlayrController.activePage == .home else { return }
-            selectedIndex = newValue
-        }
         .onChange(of: authManager.isAuthorized) { _, isAuthorized in
             if isAuthorized {
-                iPlayrController.resetIndex(for: .home)
-                iPlayrController.setActivePage(.home, menuCount: menus.count)
-                selectedIndex = iPlayrController.selectedIndex
+                scope.configure(itemCount: menus.count)
+                iPlayrController.activate(scope)
             }
         }
-        .onDisappear {
-            iPlayrController.saveCurrentIndex()
-        }
     }
-    
+
     private func setup() {
-        iPlayrController.setActivePage(.home, menuCount: menus.count)
-        selectedIndex = iPlayrController.selectedIndex
-        
-        iPlayrController.takeControl { action in
-            handleButtonAction(action)
-        }
+        scope.configure(itemCount: menus.count)
+        scope.onAction = { handleButtonAction($0) }
+        iPlayrController.activate(scope)
     }
-    
+
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
         case .select: navigation()
@@ -62,11 +50,10 @@ struct HomeListView: View {
         default: break
         }
     }
-    
+
     private func navigation() {
-        iPlayrController.releaseControl()
         let route: Route
-        switch selectedIndex {
+        switch scope.selection {
         case 0: route = .music
         case 1:
             route = .settings
@@ -76,5 +63,5 @@ struct HomeListView: View {
         }
         navigate(.push(route))
     }
-    
+
 }

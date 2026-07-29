@@ -5,6 +5,7 @@ struct AlbumCover: View {
     let album: Album
     let isSelected: Bool
     @Binding var isSongList: Bool
+    @ObservedObject var songListScope: FocusScope
     @State private var isFaceUp = false
 
     var body: some View {
@@ -44,7 +45,7 @@ struct AlbumCover: View {
     }
 
     private var songListOverlay: some View {
-        SongListView(album: album, isSelected: isSelected, isSongList: $isSongList)
+        SongListView(album: album, isSelected: isSelected, isSongList: $isSongList, scope: songListScope)
             .frame(width: 300, height: 280)
             .background(Color.white)
             .border(.gray)

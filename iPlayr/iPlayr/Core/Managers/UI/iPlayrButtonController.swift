@@ -7,27 +7,12 @@ enum ButtonAction: Sendable {
     case forwardLongPress, backwardLongPress, forwardLongPressEnd, backwardLongPressEnd
 }
 
-enum Page: Sendable {
-    case home, music, login, playlists, albumTracks, playlistTracks, coverFlow,
-         coverFlowSongList, player, theme, settings, albums
-}
-
 @MainActor
 final class iPlayrButtonController: ObservableObject {
-    @Published var selectedIndex: Int = 0
-    @Published var menuCount: Int = 0
-    @Published var activePage: Page = .home
+    @Published private(set) var activeScope: FocusScope?
 
-    var hasRightView: Bool {
-        switch activePage {
-        case .home, .music, .settings, .theme, .login:
-            return true
-        default:
-            return false
-        }
-    }
+    var hasRightView: Bool { activeScope?.showsRightView ?? false }
 
-    private var activeInputHandler: ((ButtonAction) -> Void)?
     private var globalPlaybackHandler: ((ButtonAction) -> Void)?
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
@@ -36,27 +21,21 @@ final class iPlayrButtonController: ObservableObject {
     private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true }
     private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true }
 
+    private var lastInteractionTime: Date = .distantPast
+    private let debounceInterval: TimeInterval = 0.3
+
     init() {
         selectionFeedback.prepare()
         impactFeedback.prepare()
     }
 
-    func takeControl(handler: @escaping (ButtonAction) -> Void) {
-        self.activeInputHandler = handler
-    }
-
-    func releaseControl() {
-        self.activeInputHandler = nil
+    func activate(_ scope: FocusScope) {
+        activeScope = scope
     }
 
     func setGlobalPlaybackHandler(_ handler: @escaping (ButtonAction) -> Void) {
         self.globalPlaybackHandler = handler
     }
-
-    private var savedIndices: [Page: Int] = [:]
-
-    private var lastInteractionTime: Date = .distantPast
-    private let debounceInterval: TimeInterval = 0.3
 
     private func handleInput(_ action: ButtonAction) {
         let now = Date()
@@ -72,11 +51,11 @@ final class iPlayrButtonController: ObservableObject {
             }
         }
 
-        activeInputHandler?(action)
+        activeScope?.onAction?(action)
 
         switch action {
         case .playPause, .forwardEndAlt, .backwardEndAlt:
-            if activePage != .player {
+            if activeScope?.id != "player" {
                 globalPlaybackHandler?(action)
             }
         default:
@@ -96,8 +75,7 @@ final class iPlayrButtonController: ObservableObject {
     func backwardLongPressEnded() { handleInput(.backwardLongPressEnd) }
 
     func scrollUp() {
-        guard selectedIndex > 0 else { return }
-        selectedIndex -= 1
+        guard let scope = activeScope, scope.moveUp() else { return }
         if hapticsEnabled {
             selectionFeedback.selectionChanged()
             selectionFeedback.prepare()
@@ -105,27 +83,10 @@ final class iPlayrButtonController: ObservableObject {
     }
 
     func scrollDown() {
-        guard menuCount > 0, selectedIndex < menuCount - 1 else { return }
-        selectedIndex += 1
+        guard let scope = activeScope, scope.moveDown() else { return }
         if hapticsEnabled {
             selectionFeedback.selectionChanged()
             selectionFeedback.prepare()
         }
-    }
-
-    func setActivePage(_ page: Page, menuCount: Int) {
-        saveCurrentIndex()
-        activePage = page
-        self.menuCount = menuCount
-        let restoredIndex = savedIndices[page] ?? 0
-        selectedIndex = menuCount > 0 ? min(restoredIndex, menuCount - 1) : 0
-    }
-
-    func saveCurrentIndex() {
-        savedIndices[activePage] = selectedIndex
-    }
-
-    func resetIndex(for page: Page) {
-        savedIndices[page] = 0
     }
 }

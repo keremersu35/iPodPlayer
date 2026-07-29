@@ -7,7 +7,7 @@ struct AlbumTracksView: View {
     @EnvironmentObject private var libraryStore: MusicLibraryStore
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedIndex = 0
+    @StateObject private var scope = FocusScope(id: "albumTracks")
     @State private var viewState: ViewState = .loading
     @State private var tracks: [Track] = []
 
@@ -25,11 +25,8 @@ struct AlbumTracksView: View {
         .onAppear(perform: setup)
         .task { await loadTracks() }
         .navigationBarBackButtonHidden()
-        .onDisappear {
-            iPlayrController.saveCurrentIndex()
-        }
     }
-    
+
     private func loadTracks() async {
         viewState = .loading
         let fetchedTracks = await libraryStore.albumTracks(id: collectionInfo.id)
@@ -39,7 +36,7 @@ struct AlbumTracksView: View {
             if fetchedTracks.isEmpty {
                 viewState = .empty(message: "No tracks found in this album")
             } else {
-                iPlayrController.menuCount = fetchedTracks.count
+                scope.configure(itemCount: fetchedTracks.count)
                 viewState = .content
             }
         } else {
@@ -53,23 +50,21 @@ struct AlbumTracksView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     let indexedTracks = Array(tracks.enumerated())
-                    
+
                     ForEach(indexedTracks, id: \.offset) { index, track in
                         MenuItemView(
-                            menu: Menu(id: index, name: track.title, next: selectedIndex == index),
-                            isSelected: selectedIndex == index
+                            menu: Menu(id: index, name: track.title, next: scope.selection == index),
+                            isSelected: scope.selection == index
                         )
                         .id(index)
                     }
                 }
-                .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
-                    guard iPlayrController.activePage == .albumTracks else { return }
-                    selectedIndex = newIndex
+                .onChange(of: scope.selection) { _, newIndex in
                     scrollViewProxy.scrollTo(newIndex)
                 }
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        scrollViewProxy.scrollTo(selectedIndex)
+                        scrollViewProxy.scrollTo(scope.selection)
                     }
                 }
             }
@@ -77,14 +72,10 @@ struct AlbumTracksView: View {
     }
 
     private func setup() {
-        iPlayrController.setActivePage(.albumTracks, menuCount: tracks.count)
-        selectedIndex = iPlayrController.selectedIndex
-        
-        iPlayrController.takeControl { action in
-            handleButtonAction(action)
-        }
+        scope.onAction = { handleButtonAction($0) }
+        iPlayrController.activate(scope)
     }
-    
+
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
         case .menu: dismiss()
@@ -92,11 +83,10 @@ struct AlbumTracksView: View {
         default: break
         }
     }
-    
+
     private func navigation() {
-        iPlayrController.releaseControl()
         let id = collectionInfo.id
-        navigate(.push(.player(id: id, trackIndex: selectedIndex)))
+        navigate(.push(.player(id: id, trackIndex: scope.selection)))
     }
-    
+
 }

@@ -12,6 +12,7 @@ struct PlayerView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var playerManager: AppleMusicManager
+    @StateObject private var scope = FocusScope(id: "player")
     @State private var currentDegree: Double = 80
     @State private var currentOpacity: Double = 0
     @State private var isScaleAnimation: Bool = true
@@ -114,7 +115,6 @@ struct PlayerView: View {
                 currentOpacity = 1
                 isScaleAnimation = false
             }
-            iPlayrController.activePage = .player
             setupButtonListener()
             Task {
                 try? await Task.sleep(for: .milliseconds(200))
@@ -125,13 +125,14 @@ struct PlayerView: View {
                 }
             }
         }
-        .onDisappear { stopSeeking() }
+        .onDisappear {
+            stopSeeking()
+        }
         .navigationBarBackButtonHidden()
     }
 
     private func setupButtonListener() {
-        guard iPlayrController.activePage == .player else { return }
-        iPlayrController.takeControl { action in
+        scope.onAction = { action in
             switch action {
             case .menu:
                 if isFromCoverFlow {
@@ -159,6 +160,7 @@ struct PlayerView: View {
                 stopSeeking()
             }
         }
+        iPlayrController.activate(scope)
     }
 
     private func startSeekingForward() {

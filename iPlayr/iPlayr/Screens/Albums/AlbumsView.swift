@@ -6,7 +6,7 @@ struct AlbumsView: View {
     @EnvironmentObject private var libraryStore: MusicLibraryStore
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedIndex = 0
+    @StateObject private var scope = FocusScope(id: "albums")
     @State private var viewState: ViewState = .loading
 
     var body: some View {
@@ -24,9 +24,6 @@ struct AlbumsView: View {
         .task { await loadAlbums() }
         .onAppear(perform: setup)
         .navigationBarBackButtonHidden()
-        .onDisappear {
-            iPlayrController.saveCurrentIndex()
-        }
     }
 
     private func loadAlbums() async {
@@ -37,7 +34,7 @@ struct AlbumsView: View {
             if albums.isEmpty {
                 viewState = .empty(message: "No albums found\nAdd some albums to your library")
             } else {
-                iPlayrController.menuCount = albums.count
+                scope.configure(itemCount: albums.count)
                 viewState = .content
             }
         } else {
@@ -56,9 +53,7 @@ struct AlbumsView: View {
                         .listRowInsets(EdgeInsets())
                 }
                 .listStyle(.plain)
-                .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
-                    guard iPlayrController.activePage == .albums else { return }
-                    selectedIndex = newIndex
+                .onChange(of: scope.selection) { _, newIndex in
                     scrollViewProxy.scrollTo(newIndex)
                 }
             } else {
@@ -71,17 +66,13 @@ struct AlbumsView: View {
     private func albumRow(for album: Album, index: Int) -> some View {
         CollectionMenuItem(
             model: album.toCollectionMenuModel(),
-            isSelected: index == selectedIndex
+            isSelected: index == scope.selection
         )
     }
 
     private func setup() {
-        iPlayrController.setActivePage(.albums, menuCount: libraryStore.albums?.count ?? 0)
-        selectedIndex = iPlayrController.selectedIndex
-
-        iPlayrController.takeControl { action in
-            handleButtonAction(action)
-        }
+        scope.onAction = { handleButtonAction($0) }
+        iPlayrController.activate(scope)
     }
 
     private func handleButtonAction(_ action: ButtonAction) {
@@ -93,10 +84,9 @@ struct AlbumsView: View {
     }
 
     private func navigation() {
-        iPlayrController.releaseControl()
-        guard let savedAlbums = libraryStore.albums, selectedIndex < savedAlbums.count else { return }
-        let id = savedAlbums[selectedIndex].id
-        let albumName = savedAlbums[selectedIndex].title
+        guard let savedAlbums = libraryStore.albums, scope.selection < savedAlbums.count else { return }
+        let id = savedAlbums[scope.selection].id
+        let albumName = savedAlbums[scope.selection].title
         navigate(.push(.albumTracks(id: id.rawValue, albumName: albumName)))
     }
 }

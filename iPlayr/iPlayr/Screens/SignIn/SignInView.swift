@@ -5,26 +5,22 @@ struct SignInView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var authManager: MusicAuthorizationManager
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var scope = FocusScope(id: "login", showsRightView: true)
     @State private var isShowingModal = false
     @State private var menus: [Menu] = [
         Menu(id: 1, name: "Apple Music", next: true),
     ]
-    @State private var selectedIndex: Int = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: "Sign In")
             ForEach(menus.indices, id: \.self) { index in
-                MenuItemView(menu: menus[index], isSelected: selectedIndex == index)
+                MenuItemView(menu: menus[index], isSelected: scope.selection == index)
             }
             Spacer()
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .onChange(of: iPlayrController.selectedIndex) { _, newValue in
-            guard iPlayrController.activePage == .login else { return }
-            selectedIndex = newValue
-        }
         .alert("Permission Required", isPresented: $isShowingModal) {
             Button("Go to Settings") {
                 openAppSettings()
@@ -37,10 +33,8 @@ struct SignInView: View {
     }
 
     private func setup() {
-        iPlayrController.setActivePage(.login, menuCount: menus.count)
-        selectedIndex = iPlayrController.selectedIndex
-
-        iPlayrController.takeControl { action in
+        scope.configure(itemCount: menus.count)
+        scope.onAction = { action in
             switch action {
             case .menu:
                 dismiss()
@@ -50,6 +44,7 @@ struct SignInView: View {
                 break
             }
         }
+        iPlayrController.activate(scope)
     }
 
     private func handleAppleMusicSignIn() async {

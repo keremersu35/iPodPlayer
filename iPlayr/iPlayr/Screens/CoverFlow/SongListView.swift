@@ -5,9 +5,8 @@ struct SongListView: View {
     let album: Album
     let isSelected: Bool
     @Binding var isSongList: Bool
-    @EnvironmentObject var iPlayrController: iPlayrButtonController
+    @ObservedObject var scope: FocusScope
     @EnvironmentObject private var libraryStore: MusicLibraryStore
-    @State private var selectedIndex = 0
     @State private var isLoading = true
     @State private var tracks: [Track] = []
     private var shouldLoad: Bool { isSongList && isSelected }
@@ -64,20 +63,18 @@ struct SongListView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(tracks.enumerated()), id: \.offset) { index, track in
                         MenuItemView(
-                            menu: Menu(id: index, name: track.title, next: selectedIndex == index),
-                            isSelected: selectedIndex == index
+                            menu: Menu(id: index, name: track.title, next: scope.selection == index),
+                            isSelected: scope.selection == index
                         )
                         .id(index)
                     }
                 }
-                .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
-                    guard iPlayrController.activePage == .coverFlowSongList else { return }
-                    selectedIndex = newIndex
+                .onChange(of: scope.selection) { _, newIndex in
                     proxy.scrollTo(newIndex)
                 }
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        proxy.scrollTo(selectedIndex)
+                        proxy.scrollTo(scope.selection)
                     }
                 }
             }
@@ -88,14 +85,9 @@ struct SongListView: View {
     private func loadTracks() {
         Task {
             tracks = await libraryStore.albumTracks(id: album.id.rawValue) ?? []
-            updateControllerIfNeeded()
+            scope.configure(itemCount: tracks.count)
             isLoading = false
         }
-    }
-
-    private func updateControllerIfNeeded() {
-        guard iPlayrController.activePage == .coverFlowSongList else { return }
-        iPlayrController.menuCount = tracks.count
     }
 
     private func cleanup() {

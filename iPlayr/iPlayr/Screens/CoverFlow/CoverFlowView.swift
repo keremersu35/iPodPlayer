@@ -6,9 +6,11 @@ struct CoverFlowView: View {
     @EnvironmentObject private var libraryStore: MusicLibraryStore
     @State private var scrollAnimator = CoverFlowScrollAnimator()
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var carouselScope = FocusScope(id: "coverFlow")
+    @StateObject private var songListScope = FocusScope(id: "coverFlowSongList")
 
     private var albums: [Album] { libraryStore.albums ?? [] }
-    @State private var selectedIndex = 0
+    private var selectedIndex: Int { carouselScope.selection }
     @State private var selectedTrackIndex = 0
     @State private var viewState: ViewState = .loading
     @State private var isPlayerView = false
@@ -55,9 +57,10 @@ struct CoverFlowView: View {
         .navigationBarBackButtonHidden()
         .task { await loadAlbums() }
         .onAppear(perform: setup)
-        .onChange(of: iPlayrController.selectedIndex) { _, newIndex in
-            guard iPlayrController.activePage == .coverFlow else { return }
-            navigateTo(newIndex, updateController: false)
+        .onChange(of: carouselScope.selection) { _, newIndex in
+            scrollAnimator.jumpTo(scrollOffset + dragOffset)
+            dragOffset = 0
+            scrollAnimator.animateTo(-CGFloat(newIndex) * itemStep)
         }
     }
 
@@ -70,7 +73,7 @@ struct CoverFlowView: View {
                     ZStack {
                         ForEach(Array(albums.enumerated()), id: \.element.id) { index, album in
                             let offset = relativeOffset(for: index)
-                            AlbumCover(album: album, isSelected: index == selectedIndex, isSongList: $isSongList)
+                            AlbumCover(album: album, isSelected: index == selectedIndex, isSongList: $isSongList, songListScope: songListScope)
                                 .frame(width: itemWidth, height: itemWidth)
                                 .rotation3DEffect(.degrees(rotation(offset)), axis: (x: 0, y: 1, z: 0), perspective: 0.3)
                                 .scaleEffect(scale(offset))
@@ -129,9 +132,8 @@ struct CoverFlowView: View {
 
     // MARK: - Navigation
 
-    private func navigateTo(_ index: Int, updateController: Bool = true) {
-        selectedIndex = index
-        if updateController { iPlayrController.selectedIndex = index }
+    private func navigateTo(_ index: Int) {
+        carouselScope.select(index)
         scrollAnimator.jumpTo(scrollOffset + dragOffset)
         dragOffset = 0
         scrollAnimator.animateTo(-CGFloat(index) * itemStep)
@@ -175,9 +177,7 @@ struct CoverFlowView: View {
             viewState = .empty(message: "No albums found\nAdd some albums to your library")
         } else {
             let initialIndex = max(0, savedAlbums.count / 2)
-            selectedIndex = initialIndex
-            iPlayrController.menuCount = savedAlbums.count
-            iPlayrController.selectedIndex = initialIndex
+            carouselScope.configure(itemCount: savedAlbums.count, selection: initialIndex)
             scrollAnimator.jumpTo(-CGFloat(initialIndex) * itemStep)
             viewState = .content
         }
@@ -186,10 +186,8 @@ struct CoverFlowView: View {
     // MARK: - Lifecycle
 
     private func setup() {
-        iPlayrController.activePage = .coverFlow
-        iPlayrController.menuCount = albums.count
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.takeControl { handleButtonAction($0) }
+        carouselScope.onAction = { handleButtonAction($0) }
+        iPlayrController.activate(carouselScope)
     }
 
     // MARK: - Button Actions
@@ -217,8 +215,8 @@ struct CoverFlowView: View {
     }
 
     private func handleSelectAction() {
-        if isSongList && iPlayrController.activePage == .coverFlowSongList {
-            let trackIndex = iPlayrController.selectedIndex
+        if isSongList && iPlayrController.activeScope === songListScope {
+            let trackIndex = songListScope.selection
             // Wait for the flip animation to finish before loading PlayerView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 playerViewId = UUID()
@@ -227,15 +225,13 @@ struct CoverFlowView: View {
             }
         } else if !isSongList && !isPlayerView {
             isSongList = true
-            iPlayrController.activePage = .coverFlowSongList
-            iPlayrController.selectedIndex = 0
+            songListScope.onAction = { handleButtonAction($0) }
+            iPlayrController.activate(songListScope)
         }
     }
 
     private func configureController() {
-        iPlayrController.activePage = .coverFlow
-        iPlayrController.menuCount = albums.count
-        iPlayrController.selectedIndex = selectedIndex
-        iPlayrController.takeControl { handleButtonAction($0) }
+        carouselScope.onAction = { handleButtonAction($0) }
+        iPlayrController.activate(carouselScope)
     }
 }
