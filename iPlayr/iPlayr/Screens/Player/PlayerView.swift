@@ -21,6 +21,7 @@ struct PlayerView: View {
     @State private var isSeekingBackward: Bool = false
     @State private var seekStartTime: Date?
     @State private var currentSeekSpeed: Double = 1.0
+    @State private var playbackErrorMessage: String?
 
     private let initialRotation: Double = 80
     private let finalRotation: Double = 5
@@ -29,6 +30,61 @@ struct PlayerView: View {
     private let fadeDuration: Double = 0.4
 
     var body: some View {
+        ZStack {
+            playerContent
+            if let playbackErrorMessage {
+                errorOverlay(playbackErrorMessage)
+            }
+        }
+        .background(Color.white)
+        .frame(maxHeight: .infinity)
+        .onAppear {
+            if let artwork = initialArtwork {
+                activeArtwork = artwork
+            } else {
+                activeArtwork = playerManager.currentTrack?.artwork
+            }
+            if !isFromCoverFlow {
+                currentDegree = finalRotation
+                currentOpacity = 1
+                isScaleAnimation = false
+            }
+            setupButtonListener()
+            Task {
+                try? await Task.sleep(for: .milliseconds(200))
+                do {
+                    if isFromPlaylist {
+                        try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
+                    } else {
+                        try await playerManager.playAlbum(id: id, fromIndex: trackIndex)
+                    }
+                } catch {
+                    playbackErrorMessage = error.localizedDescription
+                }
+            }
+        }
+        .onDisappear {
+            stopSeeking()
+        }
+        .navigationBarBackButtonHidden()
+    }
+
+    private func errorOverlay(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: ImageNames.System.xCircle)
+                .font(.system(size: 40))
+                .foregroundColor(.red.opacity(0.6))
+            Text(message)
+                .padding(.horizontal)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+                .minimumScaleFactor(0.4)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.white)
+    }
+
+    private var playerContent: some View {
         VStack(spacing: 0) {
             if !isFromCoverFlow {
                 StatusBar(title: "Now Playing")
@@ -96,39 +152,11 @@ struct PlayerView: View {
                 SongProgressView()
                     .environmentObject(playerManager)
                     .opacity(currentOpacity)
-                    .id(playerManager.currentTrack?.title ?? "")
                     .padding(.horizontal, -4)
             }
             .padding(.horizontal, 24)
             Spacer()
         }
-        .background(Color.white)
-        .frame(maxHeight: .infinity)
-        .onAppear {
-            if let artwork = initialArtwork {
-                activeArtwork = artwork
-            } else {
-                activeArtwork = playerManager.currentTrack?.artwork
-            }
-            if !isFromCoverFlow {
-                currentDegree = finalRotation
-                currentOpacity = 1
-                isScaleAnimation = false
-            }
-            setupButtonListener()
-            Task {
-                try? await Task.sleep(for: .milliseconds(200))
-                if isFromPlaylist {
-                    try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
-                } else {
-                    try await playerManager.playAlbum(id: id, fromIndex: trackIndex)
-                }
-            }
-        }
-        .onDisappear {
-            stopSeeking()
-        }
-        .navigationBarBackButtonHidden()
     }
 
     private func setupButtonListener() {
@@ -221,89 +249,65 @@ struct PlayerView: View {
 }
 
 struct SongProgressView: View {
-    @State var progress: Double = 0
     @EnvironmentObject private var playerManager: AppleMusicManager
-    @State private var visualProgress: Double = 0
-    @State private var timer: Timer?
 
     private var currentDuration: TimeInterval {
         playerManager.currentTrack?.duration ?? 0
     }
 
+    private var visualProgress: Double {
+        guard currentDuration > 0 else { return 0 }
+        return min(1.0, playerManager.currentPlaybackTime / currentDuration)
+    }
+
+    /// The bar interpolates smoothly while playing; when paused there's nothing to
+    /// animate, so the timeline all but stops ticking instead of spinning for no reason.
+    private var barUpdateInterval: TimeInterval { playerManager.isPlaying ? 0.1 : 3600 }
+    /// The elapsed/remaining labels only visually change once a second.
+    private var textUpdateInterval: TimeInterval { playerManager.isPlaying ? 1 : 3600 }
+
     var body: some View {
         HStack(spacing: 0) {
-            Text(formattedTime(from: Int(visualProgress * currentDuration)))
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.black)
-                .frame(width: 50)
-                .multilineTextAlignment(.trailing)
+            TimelineView(.periodic(from: .now, by: textUpdateInterval)) { _ in
+                Text(formattedTime(from: Int(visualProgress * currentDuration)))
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(width: 50)
+                    .multilineTextAlignment(.trailing)
+            }
+
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Rectangle()
-                        .fill(Color(.white).gradient.shadow(.inner(color: .black.opacity(0.1), radius: 10, x: 0, y: -2)))
-                        .frame(height: 18)
-                    Rectangle()
-                        .fill(Color(.white).gradient.shadow(.inner(color: .black.opacity(0.2), radius: 10, x: 0, y: 2)))
-                        .frame(height: 18)
-                    Rectangle()
-                        .fill(Color(.systemBlue).gradient.shadow(.inner(color: .white.opacity(0.2), radius: 8, x: 0, y: -4)))
-                        .frame(width: geo.size.width * CGFloat(visualProgress), height: 18)
+                    progressTrackBackground
+                    TimelineView(.periodic(from: .now, by: barUpdateInterval)) { _ in
+                        Rectangle()
+                            .fill(Color(.systemBlue).gradient.shadow(.inner(color: .white.opacity(0.2), radius: 8, x: 0, y: -4)))
+                            .frame(width: geo.size.width * CGFloat(visualProgress), height: 18)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: 18)
             .padding(8)
 
-            Text("-\(formattedTime(from: Int(currentDuration - (visualProgress * currentDuration))))")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(.black)
-                .frame(width: 50)
-                .multilineTextAlignment(.leading)
+            TimelineView(.periodic(from: .now, by: textUpdateInterval)) { _ in
+                Text("-\(formattedTime(from: Int(currentDuration - (visualProgress * currentDuration))))")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(width: 50)
+                    .multilineTextAlignment(.leading)
+            }
         }
         .frame(maxWidth: .infinity)
-        .onAppear(perform: startVisualTimer)
-        .onDisappear {
-            timer?.invalidate()
-            timer = nil
-        }
-        .onChange(of: currentDuration) { oldValue, newValue in
-            if abs(oldValue - newValue) > 1 {
-                progress = 0
-                visualProgress = 0
-                startVisualTimer()
-            }
-        }
-        .onChange(of: playerManager.isPlaying) { _, isPlaying in
-            if isPlaying {
-                startVisualTimer()
-            } else {
-                timer?.invalidate()
-                timer = nil
-            }
-        }
-        .onChange(of: playerManager.currentTrack?.title) { _, _ in
-            progress = 0
-            visualProgress = 0
-            timer?.invalidate()
-            timer = nil
-            if playerManager.isPlaying {
-                startVisualTimer()
-            }
-        }
     }
 
-    @MainActor private func startVisualTimer() {
-        timer?.invalidate()
-        timer = nil
-
-        guard currentDuration > 0 else { return }
-
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            Task { @MainActor in
-                if playerManager.isPlaying {
-                    let currentTime = playerManager.currentPlaybackTime
-                    visualProgress = min(1.0, currentTime / currentDuration)
-                }
-            }
+    private var progressTrackBackground: some View {
+        ZStack {
+            Rectangle()
+                .fill(Color(.white).gradient.shadow(.inner(color: .black.opacity(0.1), radius: 10, x: 0, y: -2)))
+                .frame(height: 18)
+            Rectangle()
+                .fill(Color(.white).gradient.shadow(.inner(color: .black.opacity(0.2), radius: 10, x: 0, y: 2)))
+                .frame(height: 18)
         }
     }
 

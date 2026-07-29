@@ -13,6 +13,7 @@ final class AppleMusicManager: ObservableObject {
     
     private nonisolated(unsafe) let musicPlayer = ApplicationMusicPlayer.shared
     private var cancellables = Set<AnyCancellable>()
+    private var isSkipping = false
     
     init() {
         setupSongObserver()
@@ -73,13 +74,17 @@ final class AppleMusicManager: ObservableObject {
     }
 
     func skipToNextTrack() async throws {
-        guard !isLast else { return }
+        guard !isLast, !isSkipping else { return }
+        isSkipping = true
+        defer { isSkipping = false }
         try await musicPlayer.skipToNextEntry()
         await updatePlayerState()
     }
 
     func skipToPreviousTrack() async throws {
-        guard !isFirst else { return }
+        guard !isFirst, !isSkipping else { return }
+        isSkipping = true
+        defer { isSkipping = false }
         try await musicPlayer.skipToPreviousEntry()
         await updatePlayerState()
     }
@@ -93,7 +98,10 @@ final class AppleMusicManager: ObservableObject {
     }
 
     private func setupSongObserver() {
-        musicPlayer.state.objectWillChange
+        Publishers.Merge(
+            musicPlayer.state.objectWillChange,
+            musicPlayer.queue.objectWillChange
+        )
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in
