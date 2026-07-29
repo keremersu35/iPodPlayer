@@ -96,8 +96,8 @@ final class iPlayrButtonController: ObservableObject {
     func backwardLongPressEnded() { handleInput(.backwardLongPressEnd) }
 
     func scrollUp() {
-        guard menuCount > 0 else { return }
-        selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : menuCount - 1
+        guard selectedIndex > 0 else { return }
+        selectedIndex -= 1
         if hapticsEnabled {
             selectionFeedback.selectionChanged()
             selectionFeedback.prepare()
@@ -105,8 +105,8 @@ final class iPlayrButtonController: ObservableObject {
     }
 
     func scrollDown() {
-        guard menuCount > 0 else { return }
-        selectedIndex = selectedIndex < menuCount - 1 ? selectedIndex + 1 : 0
+        guard menuCount > 0, selectedIndex < menuCount - 1 else { return }
+        selectedIndex += 1
         if hapticsEnabled {
             selectionFeedback.selectionChanged()
             selectionFeedback.prepare()
