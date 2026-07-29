@@ -3,7 +3,7 @@ import MusicKit
 
 struct AlbumsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @StateObject private var albumManager = AlbumManager()
+    @EnvironmentObject private var libraryStore: MusicLibraryStore
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     @State private var selectedIndex = 0
@@ -31,9 +31,9 @@ struct AlbumsView: View {
 
     private func loadAlbums() async {
         viewState = .loading
-        await albumManager.getCurrentUserSavedAlbums()
+        await libraryStore.loadAlbumsIfNeeded()
 
-        if let albums = albumManager.savedAlbums {
+        if let albums = libraryStore.albums {
             if albums.isEmpty {
                 viewState = .empty(message: "No albums found\nAdd some albums to your library")
             } else {
@@ -41,14 +41,14 @@ struct AlbumsView: View {
                 viewState = .content
             }
         } else {
-            viewState = .error(message: albumManager.errorMessage ?? "An error occurred\nPlease try again")
+            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again")
         }
     }
 
     @ViewBuilder
     private var albumsScrollView: some View {
         ScrollViewReader { scrollViewProxy in
-            if let savedAlbums = albumManager.savedAlbums {
+            if let savedAlbums = libraryStore.albums {
                 List(savedAlbums.indices, id: \.self) { index in
                     let album = savedAlbums[index]
                     albumRow(for: album, index: index)
@@ -76,7 +76,7 @@ struct AlbumsView: View {
     }
 
     private func setup() {
-        iPlayrController.setActivePage(.albums, menuCount: albumManager.savedAlbums?.count ?? 0)
+        iPlayrController.setActivePage(.albums, menuCount: libraryStore.albums?.count ?? 0)
         selectedIndex = iPlayrController.selectedIndex
 
         iPlayrController.takeControl { action in
@@ -94,7 +94,7 @@ struct AlbumsView: View {
 
     private func navigation() {
         iPlayrController.releaseControl()
-        guard let savedAlbums = albumManager.savedAlbums, selectedIndex < savedAlbums.count else { return }
+        guard let savedAlbums = libraryStore.albums, selectedIndex < savedAlbums.count else { return }
         let id = savedAlbums[selectedIndex].id
         let albumName = savedAlbums[selectedIndex].title
         navigate(.push(.albumTracks(id: id.rawValue, albumName: albumName)))

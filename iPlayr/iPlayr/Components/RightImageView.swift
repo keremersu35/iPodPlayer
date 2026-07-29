@@ -4,7 +4,7 @@ import Combine
 
 struct RightImageView: View {
     @EnvironmentObject private var authManager: MusicAuthorizationManager
-    @StateObject private var albumManager = AlbumManager()
+    @EnvironmentObject private var libraryStore: MusicLibraryStore
     @State private var currentImageIndex = 0
     @State private var timerCancellable: AnyCancellable?
     @State private var panDirection: PanDirection = .right
@@ -19,7 +19,7 @@ struct RightImageView: View {
 
             if !authManager.isAuthorized {
                 unauthorizedView
-            } else if let images = albumManager.savedAlbums?.compactMap({ $0.artwork }),
+            } else if let images = libraryStore.albums?.compactMap({ $0.artwork }),
                       !images.isEmpty {
                 artworkSlideshow(images)
             } else {
@@ -32,16 +32,16 @@ struct RightImageView: View {
                 Task { await loadAlbumsIfAuthorized() }
             }
         }
-        .onReceive(albumManager.$savedAlbums) { albums in
+        .onChange(of: libraryStore.albums) { _, albums in
             guard !(albums?.isEmpty ?? true) else { return }
             startImageCycle()
         }
         .onDisappear(perform: stopImageCycle)
     }
-    
+
     private func loadAlbumsIfAuthorized() async {
         guard authManager.isAuthorized else { return }
-        await albumManager.getCurrentUserSavedAlbums()
+        await libraryStore.loadAlbumsIfNeeded()
     }
 
     private var unauthorizedView: some View {
@@ -95,7 +95,7 @@ struct RightImageView: View {
     }
 
     private func transitionToNextImage() {
-        guard let albumsCount = albumManager.savedAlbums?.count,
+        guard let albumsCount = libraryStore.albums?.count,
               albumsCount > 1 else { return }
 
         withAnimation(.easeInOut(duration: transitionDuration)) {

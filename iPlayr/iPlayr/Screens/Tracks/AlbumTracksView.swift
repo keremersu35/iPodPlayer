@@ -4,11 +4,12 @@ import MusicKit
 struct AlbumTracksView: View {
     let collectionInfo: CollectionInfoModel
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @StateObject private var albumManager = AlbumManager()
+    @EnvironmentObject private var libraryStore: MusicLibraryStore
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     @State private var selectedIndex = 0
     @State private var viewState: ViewState = .loading
+    @State private var tracks: [Track] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -31,27 +32,27 @@ struct AlbumTracksView: View {
     
     private func loadTracks() async {
         viewState = .loading
-        await albumManager.getAlbumTracks(id: collectionInfo.id)
-        
-        if let tracks = albumManager.savedAlbumsTracks {
-            if tracks.isEmpty {
+        let fetchedTracks = await libraryStore.albumTracks(id: collectionInfo.id)
+
+        if let fetchedTracks {
+            tracks = fetchedTracks
+            if fetchedTracks.isEmpty {
                 viewState = .empty(message: "No tracks found in this album")
             } else {
-                iPlayrController.menuCount = tracks.count
+                iPlayrController.menuCount = fetchedTracks.count
                 viewState = .content
             }
         } else {
-            viewState = .error(message: albumManager.errorMessage ?? "An error occurred\nPlease try again later")
+            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again later")
         }
     }
-    
+
     @ViewBuilder
     private var tracksScrollView: some View {
         ScrollViewReader { scrollViewProxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    let savedTracks = albumManager.savedAlbumsTracks?.compactMap { $0 } ?? []
-                    let indexedTracks = Array(savedTracks.enumerated())
+                    let indexedTracks = Array(tracks.enumerated())
                     
                     ForEach(indexedTracks, id: \.offset) { index, track in
                         MenuItemView(
@@ -76,7 +77,7 @@ struct AlbumTracksView: View {
     }
 
     private func setup() {
-        iPlayrController.setActivePage(.albumTracks, menuCount: albumManager.savedAlbumsTracks?.count ?? 0)
+        iPlayrController.setActivePage(.albumTracks, menuCount: tracks.count)
         selectedIndex = iPlayrController.selectedIndex
         
         iPlayrController.takeControl { action in

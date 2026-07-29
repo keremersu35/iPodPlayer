@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PlaylistsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @StateObject private var playlistManager = PlaylistManager()
+    @EnvironmentObject private var libraryStore: MusicLibraryStore
     @Environment(\.navigate) private var navigate
     @Environment(\.dismiss) private var dismiss
     @State private var selectedIndex = 0
@@ -29,9 +29,9 @@ struct PlaylistsView: View {
     
     private func loadPlaylists() async {
         viewState = .loading
-        await playlistManager.fetchPlaylists()
-        
-        if let playlists = playlistManager.playlists {
+        await libraryStore.loadPlaylistsIfNeeded()
+
+        if let playlists = libraryStore.playlists {
             if playlists.isEmpty {
                 viewState = .empty(message: "No playlists found\nCreate some playlists to get started")
             } else {
@@ -39,14 +39,14 @@ struct PlaylistsView: View {
                 viewState = .content
             }
         } else {
-            viewState = .error(message: playlistManager.errorMessage ?? "An error occurred\nPlease try again later")
+            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again later")
         }
     }
-    
+
     @ViewBuilder
     private var playlistScrollView: some View {
         ScrollViewReader { scrollViewProxy in
-            let savedPlaylists = playlistManager.playlists?.compactMap { $0 } ?? []
+            let savedPlaylists = libraryStore.playlists ?? []
             let indexedPlaylists = Array(savedPlaylists.enumerated())
             List(indexedPlaylists, id: \.offset) { index, playlist in
                 CollectionMenuItem(
@@ -71,7 +71,7 @@ struct PlaylistsView: View {
     }
     
     private func setup() {
-        iPlayrController.setActivePage(.playlists, menuCount: playlistManager.playlists?.count ?? 0)
+        iPlayrController.setActivePage(.playlists, menuCount: libraryStore.playlists?.count ?? 0)
         selectedIndex = iPlayrController.selectedIndex
         
         iPlayrController.takeControl { action in
@@ -89,7 +89,7 @@ struct PlaylistsView: View {
     
     private func navigation() {
         iPlayrController.releaseControl()
-        guard let playlists = playlistManager.playlists, selectedIndex < playlists.count else { return }
+        guard let playlists = libraryStore.playlists, selectedIndex < playlists.count else { return }
         let id = playlists[selectedIndex].id
         let playlistName = playlists[selectedIndex].name
         navigate(.push(.playlistTracks(id: id.rawValue, playlistName: playlistName)))

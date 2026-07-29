@@ -6,11 +6,11 @@ struct SongListView: View {
     let isSelected: Bool
     @Binding var isSongList: Bool
     @EnvironmentObject var iPlayrController: iPlayrButtonController
-    @StateObject private var albumManager = AlbumManager()
+    @EnvironmentObject private var libraryStore: MusicLibraryStore
     @State private var selectedIndex = 0
     @State private var isLoading = true
+    @State private var tracks: [Track] = []
     private var shouldLoad: Bool { isSongList && isSelected }
-    private var tracks: [Track] { albumManager.savedAlbumsTracks?.compactMap { $0 } ?? [] }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,9 +27,6 @@ struct SongListView: View {
         .onDisappear(perform: cleanup)
         .onChange(of: shouldLoad, initial: false) { _, shouldLoad in
             if shouldLoad { loadTracks() }
-        }
-        .onReceive(albumManager.$savedAlbumsTracks) { tracks in
-            isLoading = tracks == nil
         }
     }
 
@@ -90,7 +87,7 @@ struct SongListView: View {
 
     private func loadTracks() {
         Task {
-            await albumManager.getAlbumTracks(id: album.id.rawValue)
+            tracks = await libraryStore.albumTracks(id: album.id.rawValue) ?? []
             updateControllerIfNeeded()
             isLoading = false
         }

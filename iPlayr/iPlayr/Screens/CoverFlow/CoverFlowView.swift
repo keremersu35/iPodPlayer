@@ -3,11 +3,11 @@ import MusicKit
 
 struct CoverFlowView: View {
     @EnvironmentObject var iPlayrController: iPlayrButtonController
-    @StateObject private var albumManager = AlbumManager()
+    @EnvironmentObject private var libraryStore: MusicLibraryStore
     @State private var scrollAnimator = CoverFlowScrollAnimator()
     @Environment(\.dismiss) private var dismiss
 
-    @State private var albums: MusicItemCollection<Album> = []
+    private var albums: [Album] { libraryStore.albums ?? [] }
     @State private var selectedIndex = 0
     @State private var selectedTrackIndex = 0
     @State private var viewState: ViewState = .loading
@@ -34,7 +34,7 @@ struct CoverFlowView: View {
 
                 if isPlayerView {
                     PlayerView(
-                        id: albumManager.savedAlbums?[selectedIndex].id.rawValue ?? "",
+                        id: albums.indices.contains(selectedIndex) ? albums[selectedIndex].id.rawValue : "",
                         trackIndex: selectedTrackIndex,
                         isFromCoverFlow: true,
                         isFromPlaylist: false,
@@ -164,20 +164,19 @@ struct CoverFlowView: View {
 
     private func loadAlbums() async {
         viewState = .loading
-        await albumManager.getCurrentUserSavedAlbums()
+        await libraryStore.loadAlbumsIfNeeded()
 
-        guard let savedAlbums = albumManager.savedAlbums else {
-            viewState = .error(message: albumManager.errorMessage ?? "An error occurred\nPlease try again")
+        guard let savedAlbums = libraryStore.albums else {
+            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again")
             return
         }
 
         if savedAlbums.isEmpty {
             viewState = .empty(message: "No albums found\nAdd some albums to your library")
         } else {
-            albums = savedAlbums
-            let initialIndex = max(0, albums.count / 2)
+            let initialIndex = max(0, savedAlbums.count / 2)
             selectedIndex = initialIndex
-            iPlayrController.menuCount = albums.count
+            iPlayrController.menuCount = savedAlbums.count
             iPlayrController.selectedIndex = initialIndex
             scrollAnimator.jumpTo(-CGFloat(initialIndex) * itemStep)
             viewState = .content
