@@ -18,12 +18,22 @@ struct CoverFlowView: View {
     @State private var playerViewId = UUID()
     @State private var dragOffset: CGFloat = 0
 
-    private let itemWidth: CGFloat = 160
-    private let itemStep: CGFloat = 180
-    private let tilt: CGFloat = 0.7
-    private let cfSpacing: CGFloat = 0.2
+    private let itemWidth = CoverFlowMetrics.coverSize
+    private let itemStep = CoverFlowMetrics.itemStep
+    private let tilt = CoverFlowMetrics.tilt
+    private let cfSpacing = CoverFlowMetrics.spacing
 
     private var scrollOffset: CGFloat { scrollAnimator.scrollOffset }
+
+    /// Only covers within `windowRadius` of the selection are rendered — with a large
+    /// library, rendering every cover (most of them offscreen) is the single biggest
+    /// cost in this view.
+    private var visibleAlbums: [(index: Int, album: Album)] {
+        guard !albums.isEmpty else { return [] }
+        let lower = max(0, selectedIndex - CoverFlowMetrics.windowRadius)
+        let upper = min(albums.count - 1, selectedIndex + CoverFlowMetrics.windowRadius)
+        return (lower...upper).map { (index: $0, album: albums[$0]) }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,14 +81,14 @@ struct CoverFlowView: View {
                 Spacer().frame(height: 8)
                 GeometryReader { geometry in
                     ZStack {
-                        ForEach(Array(albums.enumerated()), id: \.element.id) { index, album in
-                            let offset = relativeOffset(for: index)
-                            AlbumCover(album: album, isSelected: index == selectedIndex, isSongList: $isSongList, songListScope: songListScope)
+                        ForEach(visibleAlbums, id: \.album.id) { item in
+                            let offset = relativeOffset(for: item.index)
+                            AlbumCover(album: item.album, isSelected: item.index == selectedIndex, isSongList: $isSongList, songListScope: songListScope)
                                 .frame(width: itemWidth, height: itemWidth)
                                 .rotation3DEffect(.degrees(rotation(offset)), axis: (x: 0, y: 1, z: 0), perspective: 0.3)
                                 .scaleEffect(scale(offset))
                                 .offset(x: xOffset(offset))
-                                .zIndex(isSongList && index == selectedIndex ? 1000 : zIndex(offset))
+                                .zIndex(isSongList && item.index == selectedIndex ? 1000 : zIndex(offset))
                         }
                     }
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)

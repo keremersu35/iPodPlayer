@@ -15,6 +15,7 @@ private struct ReflectionModifier: ViewModifier {
                     .scaleEffect(x: 1.0, y: -2.0, anchor: .bottom)
                     .opacity(0.3)
                     .offset(y: offsetY)
+                    .allowsHitTesting(false)
             )
     }
 }
