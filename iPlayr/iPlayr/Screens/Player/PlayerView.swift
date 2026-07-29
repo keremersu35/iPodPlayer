@@ -87,7 +87,7 @@ struct PlayerView: View {
     private var playerContent: some View {
         VStack(spacing: 0) {
             if !isFromCoverFlow {
-                StatusBar(title: "Now Playing")
+                StatusBar(title: String(localized: "Now Playing"))
             }
             Spacer()
             VStack {

@@ -16,7 +16,7 @@ final class MusicLibraryStore: ObservableObject {
         do {
             albums = try await service.fetchAlbums()
         } catch {
-            errorMessage = "Request failed with error: \(error.localizedDescription)"
+            errorMessage = String(localized: "Request failed with error: \(error.localizedDescription)")
         }
     }
 
@@ -25,7 +25,7 @@ final class MusicLibraryStore: ObservableObject {
         do {
             playlists = try await service.fetchPlaylists()
         } catch {
-            errorMessage = "Request failed with error: \(error.localizedDescription)"
+            errorMessage = String(localized: "Request failed with error: \(error.localizedDescription)")
         }
     }
 
@@ -36,7 +36,7 @@ final class MusicLibraryStore: ObservableObject {
             albumTracksCache[id] = tracks
             return tracks
         } catch {
-            errorMessage = "Request failed with error: \(error.localizedDescription)"
+            errorMessage = String(localized: "Request failed with error: \(error.localizedDescription)")
             return nil
         }
     }
@@ -48,7 +48,7 @@ final class MusicLibraryStore: ObservableObject {
             playlistTracksCache[id] = tracks
             return tracks
         } catch {
-            errorMessage = "Request failed with error: \(error.localizedDescription)"
+            errorMessage = String(localized: "Request failed with error: \(error.localizedDescription)")
             return nil
         }
     }

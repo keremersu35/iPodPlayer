@@ -34,13 +34,13 @@ struct PlaylistTracksView: View {
         if let fetchedTracks {
             tracks = fetchedTracks
             if fetchedTracks.isEmpty {
-                viewState = .empty(message: "No tracks found in this playlist\nAdd some tracks to get started")
+                viewState = .empty(message: String(localized: "No tracks found in this playlist\nAdd some tracks to get started"))
             } else {
                 scope.configure(itemCount: fetchedTracks.count)
                 viewState = .content
             }
         } else {
-            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again later")
+            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again later"))
         }
     }
 

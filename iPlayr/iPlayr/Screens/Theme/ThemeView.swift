@@ -6,14 +6,14 @@ struct ThemeView: View {
     @EnvironmentObject private var theme: ThemeManager
     @StateObject private var scope = FocusScope(id: "theme", showsRightView: true)
     private var menus: [Menu] = [
-        .init(id: 0, name: "Silver", next: false),
-        .init(id: 1, name: "Black", next: false),
-        .init(id: 2, name: "U2 Edition", next: false),
+        .init(id: 0, name: String(localized: "Silver"), next: false),
+        .init(id: 1, name: String(localized: "Black"), next: false),
+        .init(id: 2, name: String(localized: "U2 Edition"), next: false),
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: "Themes")
+            StatusBar(title: String(localized: "Themes"))
             ForEach(menus, id: \.id) { menu in
                 MenuItemView(menu: menu, isSelected: scope.selection == menu.id)
             }

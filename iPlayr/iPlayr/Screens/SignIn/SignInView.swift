@@ -8,12 +8,12 @@ struct SignInView: View {
     @StateObject private var scope = FocusScope(id: "login", showsRightView: true)
     @State private var isShowingModal = false
     @State private var menus: [Menu] = [
-        Menu(id: 1, name: "Apple Music", next: true),
+        Menu(id: 1, name: String(localized: "Apple Music"), next: true),
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: "Sign In")
+            StatusBar(title: String(localized: "Sign In"))
             ForEach(menus.indices, id: \.self) { index in
                 MenuItemView(menu: menus[index], isSelected: scope.selection == index)
             }

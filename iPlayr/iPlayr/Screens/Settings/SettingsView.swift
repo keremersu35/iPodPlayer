@@ -10,15 +10,15 @@ struct SettingsView: View {
 
     private var menus: [Menu] {
         [
-            .init(id: 0, name: "Themes", next: true),
-            .init(id: 1, name: "Haptics", next: false, value: hapticsEnabled ? "On" : "Off"),
-            .init(id: 2, name: "Sounds", next: false, value: soundsEnabled ? "On" : "Off"),
+            .init(id: 0, name: String(localized: "Themes"), next: true),
+            .init(id: 1, name: String(localized: "Haptics"), next: false, value: hapticsEnabled ? String(localized: "On") : String(localized: "Off")),
+            .init(id: 2, name: String(localized: "Sounds"), next: false, value: soundsEnabled ? String(localized: "On") : String(localized: "Off")),
         ]
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: "Settings")
+            StatusBar(title: String(localized: "Settings"))
             ForEach(menus.indices, id: \.self) { index in
                 MenuItemView(menu: menus[index], isSelected: scope.selection == index)
             }

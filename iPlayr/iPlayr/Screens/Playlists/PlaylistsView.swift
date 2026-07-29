@@ -10,7 +10,7 @@ struct PlaylistsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: "Playlists")
+            StatusBar(title: String(localized: "Playlists"))
             ZStack {
                 if viewState == .content {
                     playlistScrollView
@@ -30,13 +30,13 @@ struct PlaylistsView: View {
 
         if let playlists = libraryStore.playlists {
             if playlists.isEmpty {
-                viewState = .empty(message: "No playlists found\nCreate some playlists to get started")
+                viewState = .empty(message: String(localized: "No playlists found\nCreate some playlists to get started"))
             } else {
                 scope.configure(itemCount: playlists.count)
                 viewState = .content
             }
         } else {
-            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again later")
+            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again later"))
         }
     }
 

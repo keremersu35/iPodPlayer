@@ -42,8 +42,7 @@ final class AppleMusicManager: ObservableObject {
         let queue = ApplicationMusicPlayer.Queue(album: album, startingAt: startingTrack)
         musicPlayer.queue = queue
         musicPlayer.state.shuffleMode = .off
-        try await musicPlayer.prepareToPlay()
-        try await musicPlayer.play()
+        try await startPlayback()
     }
 
     func playPlaylist(id: String, fromIndex: Int = 0) async throws {
@@ -69,8 +68,23 @@ final class AppleMusicManager: ObservableObject {
         let queue = ApplicationMusicPlayer.Queue(playlist: playlist, startingAt: startingTrack)
         musicPlayer.queue = queue
         musicPlayer.state.shuffleMode = .off
-        try await musicPlayer.prepareToPlay()
-        try await musicPlayer.play()
+        try await startPlayback()
+    }
+
+    /// `prepareToPlay()`/`play()` can intermittently fail right after a queue is
+    /// assigned (MPMusicPlayerControllerErrorDomain error 6), seemingly because the
+    /// player hasn't caught up with the new queue yet. One short-delayed retry clears
+    /// it in practice, so we don't surface a scary error for what's usually a
+    /// transient timing hiccup.
+    private func startPlayback(retriesRemaining: Int = 1) async throws {
+        do {
+            try await musicPlayer.prepareToPlay()
+            try await musicPlayer.play()
+        } catch {
+            guard retriesRemaining > 0 else { throw error }
+            try? await Task.sleep(for: .milliseconds(300))
+            try await startPlayback(retriesRemaining: retriesRemaining - 1)
+        }
     }
 
     func skipToNextTrack() async throws {

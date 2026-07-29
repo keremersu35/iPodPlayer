@@ -57,7 +57,7 @@ struct CollectionMenuItem: View {
 
     @ViewBuilder
     private var artworkView: some View {
-        if let artwork = model.artwork, model.artwork?.backgroundColor != nil {
+        if let artwork = model.artwork {
             ArtworkImage(artwork, width: 50, height: 50)
         } else {
             Image(ImageNames.Custom.coverPlaceholder)

@@ -37,7 +37,7 @@ struct CoverFlowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StatusBar(title: isPlayerView ? "Now Playing" : "Cover Flow")
+            StatusBar(title: isPlayerView ? String(localized: "Now Playing") : String(localized: "Cover Flow"))
 
             ZStack {
                 if viewState == .content {
@@ -179,12 +179,12 @@ struct CoverFlowView: View {
         await libraryStore.loadAlbumsIfNeeded()
 
         guard let savedAlbums = libraryStore.albums else {
-            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again")
+            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again"))
             return
         }
 
         if savedAlbums.isEmpty {
-            viewState = .empty(message: "No albums found\nAdd some albums to your library")
+            viewState = .empty(message: String(localized: "No albums found\nAdd some albums to your library"))
         } else {
             let initialIndex = max(0, savedAlbums.count / 2)
             carouselScope.configure(itemCount: savedAlbums.count, selection: initialIndex)

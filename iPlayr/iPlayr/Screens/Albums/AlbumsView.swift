@@ -11,7 +11,7 @@ struct AlbumsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: "Albums")
+            StatusBar(title: String(localized: "Albums"))
 
             ZStack {
                 if viewState == ViewState.content {
@@ -32,13 +32,13 @@ struct AlbumsView: View {
 
         if let albums = libraryStore.albums {
             if albums.isEmpty {
-                viewState = .empty(message: "No albums found\nAdd some albums to your library")
+                viewState = .empty(message: String(localized: "No albums found\nAdd some albums to your library"))
             } else {
                 scope.configure(itemCount: albums.count)
                 viewState = .content
             }
         } else {
-            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again")
+            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again"))
         }
     }
 

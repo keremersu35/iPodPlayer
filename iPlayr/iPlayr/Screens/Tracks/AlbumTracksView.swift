@@ -34,13 +34,13 @@ struct AlbumTracksView: View {
         if let fetchedTracks {
             tracks = fetchedTracks
             if fetchedTracks.isEmpty {
-                viewState = .empty(message: "No tracks found in this album")
+                viewState = .empty(message: String(localized: "No tracks found in this album"))
             } else {
                 scope.configure(itemCount: fetchedTracks.count)
                 viewState = .content
             }
         } else {
-            viewState = .error(message: libraryStore.errorMessage ?? "An error occurred\nPlease try again later")
+            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again later"))
         }
     }
 

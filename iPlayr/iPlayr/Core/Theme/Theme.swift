@@ -2,58 +2,48 @@ import SwiftUI
 
 enum ThemeType: String, CaseIterable {
     case silver, dark, u2Edition
-}
 
-protocol Theme {
-    var caseAppearance: String { get }
-    var wheelIconTint: Color { get }
-    var wheelColor: Color { get }
-    var wheelInnerAppearance: String { get }
-}
+    var caseAppearance: String {
+        switch self {
+        case .silver: return ImageNames.Custom.lightTheme
+        case .dark, .u2Edition: return ImageNames.Custom.darkTheme
+        }
+    }
 
-struct Silver: Theme {
-    var caseAppearance = ImageNames.Custom.lightTheme
-    let wheelIconTint = Color.buttonIconTint
-    let wheelColor = Color.wheelSilver
-    let wheelInnerAppearance = ImageNames.Custom.lightThemeButton
-}
+    var wheelIconTint: Color {
+        switch self {
+        case .silver: return .buttonIconTint
+        case .dark, .u2Edition: return .white
+        }
+    }
 
-struct Dark: Theme {
-    var caseAppearance = ImageNames.Custom.darkTheme
-    let wheelIconTint = Color.white
-    let wheelColor = Color.wheelDark
-    let wheelInnerAppearance = ImageNames.Custom.darkThemeButton
-}
+    var wheelColor: Color {
+        switch self {
+        case .silver: return .wheelSilver
+        case .dark: return .wheelDark
+        case .u2Edition: return .wheelU2
+        }
+    }
 
-struct U2Edition: Theme {
-    var caseAppearance = ImageNames.Custom.darkTheme
-    let wheelIconTint = Color.white
-    let wheelColor = Color.wheelU2
-    let wheelInnerAppearance = ImageNames.Custom.darkThemeButton
-}
-
-struct ThemeFactory {
-    static func createTheme(for type: ThemeType) -> Theme {
-        switch type {
-        case .silver: return Silver()
-        case .dark: return Dark()
-        case .u2Edition: return U2Edition()
+    var wheelInnerAppearance: String {
+        switch self {
+        case .silver: return ImageNames.Custom.lightThemeButton
+        case .dark, .u2Edition: return ImageNames.Custom.darkThemeButton
         }
     }
 }
 
 @MainActor
 final class ThemeManager: ObservableObject {
-    @Published private(set) var currentTheme: Theme
-    @AppStorage("currentTheme") private var currentThemeType: ThemeType = .silver
+    @Published private(set) var currentTheme: ThemeType
 
     init() {
-        let saved = UserDefaults.standard.string(forKey: "currentTheme").flatMap(ThemeType.init) ?? .silver
-        currentTheme = ThemeFactory.createTheme(for: saved)
+        let saved = UserDefaults.standard.string(forKey: UserDefaultsKeys.currentTheme.rawValue).flatMap(ThemeType.init)
+        currentTheme = saved ?? .silver
     }
 
     func setTheme(_ themeType: ThemeType) {
-        currentThemeType = themeType
-        currentTheme = ThemeFactory.createTheme(for: themeType)
+        currentTheme = themeType
+        UserDefaults.standard.set(themeType.rawValue, forKey: UserDefaultsKeys.currentTheme.rawValue)
     }
 }

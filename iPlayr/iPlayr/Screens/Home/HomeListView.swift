@@ -9,18 +9,18 @@ struct HomeListView: View {
 
     private var menus: [Menu] {
         var baseMenus: [Menu] = [
-            .init(id: 0, name: "Music", next: true),
-            .init(id: 1, name: "Settings", next: true),
+            .init(id: 0, name: String(localized: "Music"), next: true),
+            .init(id: 1, name: String(localized: "Settings"), next: true),
         ]
         if !authManager.isAuthorized {
-            baseMenus.append(.init(id: 2, name: "Sign In", next: true))
+            baseMenus.append(.init(id: 2, name: String(localized: "Sign In"), next: true))
         }
         return baseMenus
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: "iPlayr")
+            StatusBar(title: String(localized: "iPlayr"))
             ForEach(menus.indices, id: \.self) { index in
                 MenuItemView(menu: menus[index], isSelected: scope.selection == index)
             }
