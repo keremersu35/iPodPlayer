@@ -2,8 +2,8 @@ import SwiftUI
 import MusicKit
 
 struct PlayerView: View {
-    let id: String
-    let trackIndex: Int
+    let id: String?
+    let trackIndex: Int?
     let isFromCoverFlow: Bool
     let isFromPlaylist: Bool
     var initialArtwork: Artwork?
@@ -50,8 +50,9 @@ struct PlayerView: View {
                 isScaleAnimation = false
             }
             setupButtonListener()
+            guard let id, let trackIndex else { return }
             Task {
-                try? await Task.sleep(for: .milliseconds(200))
+                try? await Task.sleep(for: .seconds(NavigationTiming.pushDuration))
                 do {
                     if isFromPlaylist {
                         try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
@@ -66,7 +67,6 @@ struct PlayerView: View {
         .onDisappear {
             stopSeeking()
         }
-        .navigationBarBackButtonHidden()
     }
 
     private func errorOverlay(_ message: String) -> some View {
@@ -278,7 +278,18 @@ struct SongProgressView: View {
                     progressTrackBackground
                     TimelineView(.periodic(from: .now, by: barUpdateInterval)) { _ in
                         Rectangle()
-                            .fill(Color(.systemBlue).gradient.shadow(.inner(color: .white.opacity(0.2), radius: 8, x: 0, y: -4)))
+                            .fill(
+                                LinearGradient(
+                                    colors: [.menuItemBackground1,
+                                             .menuItemBackground2,
+                                             .menuItemBackground3,
+                                             .menuItemBackground4,
+                                             .menuItemBackground5],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                .shadow(.inner(color: .white.opacity(0.3), radius: 4, x: 0, y: 1))
+                            )
                             .frame(width: geo.size.width * CGFloat(visualProgress), height: 18)
                     }
                 }

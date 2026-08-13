@@ -22,8 +22,7 @@ struct AlbumTracksView: View {
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .task { await loadTracks() }
-        .navigationBarBackButtonHidden()
+        .taskAfterPush { await loadTracks() }
     }
 
     private func loadTracks() async {

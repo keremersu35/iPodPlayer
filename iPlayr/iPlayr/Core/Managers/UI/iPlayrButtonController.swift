@@ -11,9 +11,8 @@ enum ButtonAction: Sendable {
 final class iPlayrButtonController: ObservableObject {
     @Published private(set) var activeScope: FocusScope?
 
-    var hasRightView: Bool { activeScope?.showsRightView ?? false }
-
     private var globalPlaybackHandler: ((ButtonAction) -> Void)?
+    var onMenuLongPress: (() -> Void)?
 
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -37,18 +36,27 @@ final class iPlayrButtonController: ObservableObject {
         self.globalPlaybackHandler = handler
     }
 
-    private func handleInput(_ action: ButtonAction) {
+    private func playPressFeedback() {
+        if hapticsEnabled {
+            impactFeedback.impactOccurred()
+            impactFeedback.prepare()
+        }
+        if soundsEnabled {
+            AudioServicesPlaySystemSound(1306)
+        }
+    }
+
+    private func consumeDebounce() -> Bool {
         let now = Date()
+        guard now.timeIntervalSince(lastInteractionTime) > debounceInterval else { return false }
+        lastInteractionTime = now
+        return true
+    }
+
+    private func handleInput(_ action: ButtonAction) {
         if action == .menu || action == .select {
-            guard now.timeIntervalSince(lastInteractionTime) > debounceInterval else { return }
-            lastInteractionTime = now
-            if hapticsEnabled {
-                impactFeedback.impactOccurred()
-                impactFeedback.prepare()
-            }
-            if soundsEnabled {
-                AudioServicesPlaySystemSound(1306)
-            }
+            guard consumeDebounce() else { return }
+            playPressFeedback()
         }
 
         activeScope?.onAction?(action)
@@ -64,6 +72,13 @@ final class iPlayrButtonController: ObservableObject {
     }
 
     func menuButtonPressed() { handleInput(.menu) }
+
+    func menuLongPressed() {
+        guard consumeDebounce() else { return }
+        playPressFeedback()
+        onMenuLongPress?()
+    }
+
     func selectButtonPressed() { handleInput(.select) }
     func forwardEndAltButtonPressed() { handleInput(.forwardEndAlt) }
     func backwardEndAltButtonPressed() { handleInput(.backwardEndAlt) }

@@ -5,7 +5,7 @@ struct SignInView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var authManager: MusicAuthorizationManager
     @Environment(\.navigate) private var navigate
-    @StateObject private var scope = FocusScope(id: "login", showsRightView: true)
+    @StateObject private var scope = FocusScope(id: "login")
     @State private var isShowingModal = false
     @State private var menus: [Menu] = [
         Menu(id: 1, name: String(localized: "Apple Music"), next: true),
@@ -29,7 +29,6 @@ struct SignInView: View {
         } message: {
             Text("This app requires access to Apple Music. Please enable it in Settings.")
         }
-        .navigationBarBackButtonHidden()
     }
 
     private func setup() {

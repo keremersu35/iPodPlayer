@@ -18,9 +18,8 @@ struct PlaylistsView: View {
             }
         }
         .shadowedBackground()
-        .task { await loadPlaylists() }
+        .taskAfterPush { await loadPlaylists() }
         .onAppear(perform: setup)
-        .navigationBarBackButtonHidden()
     }
 
     private func loadPlaylists() async {

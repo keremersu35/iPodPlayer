@@ -1,9 +1,23 @@
 import Foundation
 import SwiftUI
 
+enum NavigationTiming {
+    static let pushDuration: Double = 0.28
+}
+
+extension View {
+    func taskAfterPush(_ action: @escaping @MainActor @Sendable () async -> Void) -> some View {
+        task {
+            try? await Task.sleep(for: .seconds(NavigationTiming.pushDuration))
+            await action()
+        }
+    }
+}
+
 enum NavigationType: Hashable, Sendable {
     case push(Route)
     case pop
+    case popToRoot
 }
 
 struct NavigateAction: Sendable {
@@ -39,7 +53,8 @@ enum Route: Hashable, Identifiable, Sendable {
     case player(id: String, trackIndex: Int, isFromCoverFlow: Bool = false, isFromPlaylist: Bool = false)
     case settings
     case albums
-    
+    case nowPlaying
+
     var id: Route { self }
 }
 
@@ -48,7 +63,7 @@ extension Route {
         switch self {
         case .home, .music, .settings, .signIn, .theme:
             return false
-        case .playlists, .albums, .playlistTracks, .albumTracks, .coverFlow, .player:
+        case .playlists, .albums, .playlistTracks, .albumTracks, .coverFlow, .player, .nowPlaying:
             return true
         }
     }
@@ -72,6 +87,8 @@ extension Route {
             ThemeView()
         case .player(let id, let trackIndex, let isFromCoverFlow, let isFromPlaylist):
             PlayerView(id: id, trackIndex: trackIndex, isFromCoverFlow: isFromCoverFlow, isFromPlaylist: isFromPlaylist)
+        case .nowPlaying:
+            PlayerView(id: nil, trackIndex: nil, isFromCoverFlow: false, isFromPlaylist: false)
         case .settings:
             SettingsView()
         case .albums:

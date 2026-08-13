@@ -20,9 +20,8 @@ struct AlbumsView: View {
             }
         }
         .shadowedBackground()
-        .task { await loadAlbums() }
+        .taskAfterPush { await loadAlbums() }
         .onAppear(perform: setup)
-        .navigationBarBackButtonHidden()
     }
 
     private func loadAlbums() async {

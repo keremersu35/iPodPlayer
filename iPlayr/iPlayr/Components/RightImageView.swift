@@ -3,6 +3,7 @@ import MusicKit
 import Combine
 
 struct RightImageView: View {
+    var isActive: Bool = true
     @EnvironmentObject private var authManager: MusicAuthorizationManager
     @EnvironmentObject private var libraryStore: MusicLibraryStore
     @State private var currentImageIndex = 0
@@ -11,6 +12,8 @@ struct RightImageView: View {
 
     private let transitionDuration: Double = 1.5
     private let imageDuration: Double = 6.0
+    private let overscan: CGFloat = 1.25
+    private let panFraction: CGFloat = 0.08
 
     var body: some View {
         GeometryReader { proxy in
@@ -39,6 +42,13 @@ struct RightImageView: View {
             guard !(albums?.isEmpty ?? true) else { return }
             startImageCycle()
         }
+        .onChange(of: isActive) { _, isNowActive in
+            if isNowActive {
+                startImageCycle()
+            } else {
+                stopImageCycle()
+            }
+        }
         .onDisappear(perform: stopImageCycle)
     }
 
@@ -60,17 +70,17 @@ struct RightImageView: View {
     }
 
     private func artworkSlideshow(_ images: [Artwork], size: CGSize) -> some View {
-        let dimension = max(size.width, size.height) * 1.3
+        let dimension = (max(size.width, size.height) * overscan).rounded()
         return ZStack {
             if currentImageIndex >= 0 && currentImageIndex < images.count {
-                ArtworkImage(images[currentImageIndex], width: CGFloat(Int(dimension)), height: CGFloat(Int(dimension)))
+                ArtworkImage(images[currentImageIndex], width: dimension, height: dimension)
                     .scaledToFill()
                     .frame(width: size.width, height: size.height)
-                    .scaleEffect(1.2)
-                    .modifier(DynamicPanEffect(
+                    .scaleEffect(overscan)
+                    .modifier(PanEffect(
                         duration: imageDuration + transitionDuration,
                         direction: panDirection,
-                        maxOffset: size.width * 0.08
+                        maxOffset: size.width * panFraction
                     ))
                     .id("\(currentImageIndex)-\(panDirection.rawValue)")
                     .transition(.opacity)
@@ -95,6 +105,7 @@ struct RightImageView: View {
 
     private func startImageCycle() {
         stopImageCycle()
+        guard isActive, !(libraryStore.albums?.isEmpty ?? true) else { return }
         timerCancellable = Timer.publish(every: imageDuration, on: .main, in: .common)
             .autoconnect()
             .sink { _ in transitionToNextImage() }
@@ -121,7 +132,7 @@ enum PanDirection: String, CaseIterable {
     case right
 }
 
-struct DynamicPanEffect: ViewModifier {
+struct PanEffect: ViewModifier {
     let duration: Double
     let direction: PanDirection
     let maxOffset: CGFloat

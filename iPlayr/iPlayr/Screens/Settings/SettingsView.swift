@@ -5,7 +5,7 @@ struct SettingsView: View {
     @Environment(\.navigate) private var navigate
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
-    @StateObject private var scope = FocusScope(id: "settings", showsRightView: true)
+    @StateObject private var scope = FocusScope(id: "settings")
 
     private var menus: [Menu] {
         [
@@ -25,7 +25,6 @@ struct SettingsView: View {
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .navigationBarBackButtonHidden()
     }
 
     private func setup() {

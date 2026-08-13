@@ -4,7 +4,7 @@ struct ThemeView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @Environment(\.navigate) private var navigate
     @EnvironmentObject private var theme: ThemeManager
-    @StateObject private var scope = FocusScope(id: "theme", showsRightView: true)
+    @StateObject private var scope = FocusScope(id: "theme")
     private var menus: [Menu] = [
         .init(id: 0, name: String(localized: "Silver"), next: false),
         .init(id: 1, name: String(localized: "Black"), next: false),
@@ -21,7 +21,6 @@ struct ThemeView: View {
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .navigationBarBackButtonHidden()
     }
 
     private func setup() {

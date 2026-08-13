@@ -2,29 +2,39 @@ import SwiftUI
 
 struct MusicListView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
+    @EnvironmentObject private var playerManager: AppleMusicManager
     @Environment(\.navigate) private var navigate
-    @StateObject private var scope = FocusScope(id: "music", showsRightView: true)
-    private var menus: [Menu] = [
-        .init(id: 0, name: String(localized: "Cover Flow"), next: true),
-        .init(id: 1, name: String(localized: "Playlists"), next: true),
-        .init(id: 2, name: String(localized: "Albums"), next: true),
-    ]
+    @StateObject private var scope = FocusScope(id: "music")
+
+    private var entries: [(menu: Menu, route: Route)] {
+        var entries: [(menu: Menu, route: Route)] = [
+            (.init(id: 0, name: String(localized: "Cover Flow"), next: true), .coverFlow),
+            (.init(id: 1, name: String(localized: "Playlists"), next: true), .playlists),
+            (.init(id: 2, name: String(localized: "Albums"), next: true), .albums),
+        ]
+        if playerManager.currentTrack != nil {
+            entries.append((.init(id: 3, name: String(localized: "Now Playing"), next: true), .nowPlaying))
+        }
+        return entries
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: String(localized: "Music"))
-            ForEach(menus.indices, id: \.self) { index in
-                MenuItemView(menu: menus[index], isSelected: scope.selection == index)
+            ForEach(entries.indices, id: \.self) { index in
+                MenuItemView(menu: entries[index].menu, isSelected: scope.selection == index)
             }
             Spacer()
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .navigationBarBackButtonHidden()
+        .onChange(of: entries.count) { _, count in
+            scope.itemCount = count
+        }
     }
 
     private func setup() {
-        scope.configure(itemCount: menus.count)
+        scope.configure(itemCount: entries.count)
         scope.onAction = { handleButtonAction($0) }
         iPlayrController.activate(scope)
     }
@@ -34,20 +44,9 @@ struct MusicListView: View {
         case .menu:
             navigate(.pop)
         case .select:
-            navigation()
+            guard entries.indices.contains(scope.selection) else { return }
+            navigate(.push(entries[scope.selection].route))
         default: break
         }
-    }
-
-    private func navigation() {
-        let route: Route
-        switch scope.selection {
-        case 0: route = .coverFlow
-        case 1: route = .playlists
-        case 2: route = .albums
-        default: route = .playlists
-        }
-
-        navigate(.push(route))
     }
 }

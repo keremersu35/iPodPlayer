@@ -3,16 +3,14 @@ import Foundation
 @MainActor
 final class FocusScope: ObservableObject {
     let id: String
-    let showsRightView: Bool
     @Published private(set) var selection: Int = 0
     @Published var itemCount: Int = 0 {
         didSet { clampSelection() }
     }
     var onAction: ((ButtonAction) -> Void)?
 
-    init(id: String, showsRightView: Bool = false) {
+    init(id: String) {
         self.id = id
-        self.showsRightView = showsRightView
     }
 
     func configure(itemCount: Int, selection: Int = 0) {

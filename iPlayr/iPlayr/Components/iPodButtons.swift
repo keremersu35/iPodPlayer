@@ -34,7 +34,9 @@ struct iPlayrButtons: View {
                     .accessibilityLabel("Select")
                     .accessibilityAddTraits(.isButton)
 
-                makeTextButton("MENU", offset: -buttonOffset) { buttonController.menuButtonPressed() }
+                makeTextButton("MENU", offset: -buttonOffset,
+                               onTap: { buttonController.menuButtonPressed() },
+                               onLongPress: { buttonController.menuLongPressed() })
                 makeIconButton(imageName: ImageNames.System.playPause, accessibilityLabel: "Play or pause", offsetY: buttonOffset) { buttonController.playPauseButtonPressed() }
                 makeSeekButton(imageName: ImageNames.System.forwardEndAlt, accessibilityLabel: "Next track", offsetX: buttonOffset,
                              onTap: { buttonController.forwardEndAltButtonPressed() },
@@ -104,15 +106,20 @@ struct iPlayrButtons: View {
     }
 
     @ViewBuilder
-    private func makeTextButton(_ text: LocalizedStringKey, offset: CGFloat, action: @escaping () -> Void) -> some View {
+    private func makeTextButton(_ text: LocalizedStringKey, offset: CGFloat,
+                                onTap: @escaping () -> Void,
+                                onLongPress: @escaping () -> Void) -> some View {
         Text(text)
             .font(.system(size: 16, weight: .bold))
             .foregroundColor(theme.currentTheme.wheelIconTint)
             .padding(20)
+            .contentShape(Rectangle())
             .offset(y: offset)
-            .onTapGesture(perform: action)
+            .onTapGesture(perform: onTap)
+            .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 50, perform: onLongPress)
             .accessibilityLabel(text)
             .accessibilityAddTraits(.isButton)
+            .accessibilityAction(named: "Main menu", onLongPress)
     }
 }
 
