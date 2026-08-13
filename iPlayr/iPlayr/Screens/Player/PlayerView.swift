@@ -10,9 +10,9 @@ struct PlayerView: View {
     var onDismissFromCoverFlow: (() -> Void)? = nil
     @State private var activeArtwork: Artwork?
     @Environment(\.navigate) private var navigate
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @EnvironmentObject private var playerManager: AppleMusicManager
-    @StateObject private var scope = FocusScope(id: "player")
+    @Environment(iPlayrButtonController.self) private var iPlayrController
+    @Environment(AppleMusicManager.self) private var playerManager
+    @State private var scope = FocusScope(id: "player")
     @State private var currentDegree: Double = 80
     @State private var currentOpacity: Double = 0
     @State private var isScaleAnimation: Bool = true
@@ -150,7 +150,7 @@ struct PlayerView: View {
                 Spacer()
                     .frame(height: 8)
                 SongProgressView()
-                    .environmentObject(playerManager)
+                    .environment(playerManager)
                     .opacity(currentOpacity)
                     .padding(.horizontal, -4)
             }
@@ -249,7 +249,7 @@ struct PlayerView: View {
 }
 
 struct SongProgressView: View {
-    @EnvironmentObject private var playerManager: AppleMusicManager
+    @Environment(AppleMusicManager.self) private var playerManager
 
     private var currentDuration: TimeInterval {
         playerManager.currentTrack?.duration ?? 0
@@ -280,11 +280,14 @@ struct SongProgressView: View {
                         Rectangle()
                             .fill(
                                 LinearGradient(
-                                    colors: [.menuItemBackground1,
-                                             .menuItemBackground2,
-                                             .menuItemBackground3,
-                                             .menuItemBackground4,
-                                             .menuItemBackground5],
+                                    stops: [
+                                        .init(color: .progressFill1, location: 0),
+                                        .init(color: .progressFill2, location: 0.20),
+                                        .init(color: .progressFill3, location: 0.58),
+                                        .init(color: .progressFill4, location: 0.58),
+                                        .init(color: .progressFill5, location: 0.82),
+                                        .init(color: .progressFill6, location: 1),
+                                    ],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )

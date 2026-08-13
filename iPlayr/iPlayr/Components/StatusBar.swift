@@ -30,7 +30,12 @@ struct StatusBar: View {
                 Rectangle()
                     .fill(
                         LinearGradient(
-                            gradient: Gradient(colors: [.statusBar1, .statusBar2, .statusBar3, .statusBar4]),
+                            stops: [
+                                .init(color: .statusBar1, location: 0),
+                                .init(color: .statusBar2, location: 0.42),
+                                .init(color: .statusBar3, location: 0.47),
+                                .init(color: .statusBar4, location: 1),
+                            ],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -49,53 +54,47 @@ struct StatusBar: View {
 
 struct BatteryIconView: View {
     var level: CGFloat
-    private let batteryFillColors: [Color] = [.batteryFill1, .batteryFill2, .batteryFill3, .batteryFill4,
-                                              .batteryFill5, .batteryFill6, .batteryFill7, .batteryFill8,
-                                              .batteryFill9, .batteryFill10, .batteryFill11, .batteryFill12]
-    private let batteryEmpty: [Color] = [.batteryEmpty1,.batteryEmpty2,.batteryEmpty3]
+
+    private static let lowChargeThreshold: CGFloat = 0.2
+    private let greenFill: [Color] = [.batteryFill1, .batteryFill2, .batteryFill3, .batteryFill4, .batteryFill5,
+                                      .batteryFill6, .batteryFill7, .batteryFill8, .batteryFill9, .batteryFill10]
+    private let redFill: [Color] = [.batteryRed1, .batteryRed2, .batteryRed3, .batteryRed4, .batteryRed5,
+                                    .batteryRed6, .batteryRed7, .batteryRed8, .batteryRed9, .batteryRed10]
+    private let batteryEmpty: [Color] = [.batteryEmpty1, .batteryEmpty2, .batteryEmpty3]
+
+    private var fillGradient: LinearGradient {
+        let colors = level < Self.lowChargeThreshold ? redFill : greenFill
+        let bandSize = colors.count / 2
+        let stops = colors.enumerated().map { index, color -> Gradient.Stop in
+            let bandStart = index < bandSize ? 0.0 : 0.5
+            let position = Double(index % bandSize) / Double(bandSize - 1)
+            return .init(color: color, location: bandStart + position * 0.5)
+        }
+        return LinearGradient(stops: stops, startPoint: .top, endPoint: .bottom)
+    }
+
+    private var emptyGradient: LinearGradient {
+        LinearGradient(colors: batteryEmpty, startPoint: .top, endPoint: .bottom)
+    }
 
     var body: some View {
         ZStack(alignment: .leading) {
             Rectangle()
-                .stroke(.black.opacity(0.8), lineWidth: 0.5)
+                .fill(emptyGradient)
                 .frame(width: 24, height: 12)
 
             Rectangle()
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: batteryEmpty),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: 24, height: 12)
-
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        gradient:Gradient(colors:batteryFillColors),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .fill(fillGradient)
                 .frame(width: max(0, 24 * level), height: 12)
 
             Rectangle()
-                .fill(
-                    level == 1
-                    ? LinearGradient(
-                        gradient: Gradient(colors: batteryFillColors),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    : LinearGradient(
-                        gradient: Gradient(colors: batteryEmpty),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .stroke(.batteryOutline, lineWidth: 1)
+                .frame(width: 24, height: 12)
+
+            Rectangle()
+                .fill(.batteryNub)
                 .frame(width: 3, height: 5)
-                .border(.gray, width: 0.5)
+                .border(.batteryOutline, width: 0.5)
                 .offset(x: 24)
         }
         .padding(2)

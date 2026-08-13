@@ -33,24 +33,36 @@ struct MenuItemView: View {
         .background(
             Group {
                 if isSelected {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [.menuItemBackground1,
-                                         .menuItemBackground2,
-                                         .menuItemBackground3,
-                                         .menuItemBackground4,
-                                         .menuItemBackground5],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .shadow(.inner(color: .black.opacity(0.25), radius: 8, x: 0, y: -4))
-                        )
+                    SelectedRowBackground()
                 } else {
                     Rectangle()
                         .fill(.white)
                 }
             }
         )
+    }
+}
+
+struct SelectedRowBackground: View {
+    var body: some View {
+        LinearGradient(
+            colors: [.menuItemBackground1,
+                     .menuItemBackground2,
+                     .menuItemBackground3,
+                     .menuItemBackground4,
+                     .menuItemBackground5],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(.menuItemHighlight)
+                .frame(height: 1)
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(.menuItemRule)
+                .frame(height: 1)
+        }
     }
 }

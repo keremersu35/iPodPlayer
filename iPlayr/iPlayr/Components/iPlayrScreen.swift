@@ -9,7 +9,7 @@ struct iPlayrScreen: View {
     @State private var menuDepth: Int = 1
     @State private var fullScreenDepth: Int = 0
     @State private var scopeStack: [FocusScope?] = []
-    @EnvironmentObject var iPlayrController: iPlayrButtonController
+    @Environment(iPlayrButtonController.self) var iPlayrController
 
     private var isFullScreen: Bool { fullScreenDepth > 0 }
 
@@ -51,17 +51,6 @@ struct iPlayrScreen: View {
         HStack(spacing: 0) {
             stackLayer(menuStack, depth: menuDepth, width: halfWidth) {
                 withAnimation(Self.pushAnimation) { menuDepth = menuStack.count }
-            }
-            .overlay(alignment: .trailing) {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.black.opacity(0.25), .clear],
-                            startPoint: .trailing,
-                            endPoint: .leading
-                        )
-                    )
-                    .frame(width: 3)
             }
             .offset(x: isFullScreen ? -halfWidth : 0)
 
