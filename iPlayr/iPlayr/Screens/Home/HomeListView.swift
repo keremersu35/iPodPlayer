@@ -2,11 +2,11 @@ import SwiftUI
 import MusicKit
 
 struct HomeListView: View {
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @EnvironmentObject private var authManager: MusicAuthorizationManager
-    @EnvironmentObject private var playerManager: AppleMusicManager
+    @Environment(iPlayrButtonController.self) private var iPlayrController
+    @Environment(MusicAuthorizationManager.self) private var authManager
+    @Environment(AppleMusicManager.self) private var playerManager
     @Environment(\.navigate) private var navigate
-    @StateObject private var scope = FocusScope(id: "home")
+    @State private var scope = FocusScope(id: "home")
 
     private var entries: [(menu: Menu, route: Route)] {
         var entries: [(menu: Menu, route: Route)] = [

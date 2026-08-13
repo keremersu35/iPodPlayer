@@ -2,12 +2,12 @@ import SwiftUI
 import MusicKit
 
 struct CoverFlowView: View {
-    @EnvironmentObject var iPlayrController: iPlayrButtonController
-    @EnvironmentObject private var libraryStore: MusicLibraryStore
+    @Environment(iPlayrButtonController.self) var iPlayrController
+    @Environment(MusicLibraryStore.self) private var libraryStore
     @Environment(\.navigate) private var navigate
     @State private var scrollAnimator = CoverFlowScrollAnimator()
-    @StateObject private var carouselScope = FocusScope(id: "coverFlow")
-    @StateObject private var songListScope = FocusScope(id: "coverFlowSongList")
+    @State private var carouselScope = FocusScope(id: "coverFlow")
+    @State private var songListScope = FocusScope(id: "coverFlowSongList")
 
     private var albums: [Album] { libraryStore.albums ?? [] }
     private var selectedIndex: Int { carouselScope.selection }

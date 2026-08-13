@@ -2,10 +2,10 @@ import SwiftUI
 import MusicKit
 
 struct AlbumsView: View {
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @EnvironmentObject private var libraryStore: MusicLibraryStore
+    @Environment(iPlayrButtonController.self) private var iPlayrController
+    @Environment(MusicLibraryStore.self) private var libraryStore
     @Environment(\.navigate) private var navigate
-    @StateObject private var scope = FocusScope(id: "albums")
+    @State private var scope = FocusScope(id: "albums")
     @State private var viewState: ViewState = .loading
 
     var body: some View {

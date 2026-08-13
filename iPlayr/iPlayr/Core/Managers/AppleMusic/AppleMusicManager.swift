@@ -1,19 +1,21 @@
 import Foundation
 import Combine
 import MusicKit
+import Observation
 
 @MainActor
-final class AppleMusicManager: ObservableObject {
-    
-    @Published var currentTrack: Song?
-    @Published var isPlaying: Bool = false
-    @Published private(set) var isPaused: Bool = false
-    @Published private(set) var isLast: Bool = false
-    @Published private(set) var isFirst: Bool = false
-    
-    private nonisolated(unsafe) let musicPlayer = ApplicationMusicPlayer.shared
-    private var cancellables = Set<AnyCancellable>()
-    private var isSkipping = false
+@Observable
+final class AppleMusicManager {
+
+    var currentTrack: Song?
+    var isPlaying: Bool = false
+    private(set) var isPaused: Bool = false
+    private(set) var isLast: Bool = false
+    private(set) var isFirst: Bool = false
+
+    @ObservationIgnored private nonisolated(unsafe) let musicPlayer = ApplicationMusicPlayer.shared
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+    @ObservationIgnored private var isSkipping = false
     
     init() {
         setupSongObserver()

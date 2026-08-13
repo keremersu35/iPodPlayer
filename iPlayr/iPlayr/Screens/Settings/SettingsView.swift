@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
+    @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(\.navigate) private var navigate
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
-    @StateObject private var scope = FocusScope(id: "settings")
+    @State private var scope = FocusScope(id: "settings")
 
     private var menus: [Menu] {
         [

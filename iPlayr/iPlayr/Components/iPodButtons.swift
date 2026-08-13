@@ -5,8 +5,8 @@ struct iPlayrButtons: View {
 
     @State private var lastAngle: CGFloat?
     @State private var counter: CGFloat = 0
-    @EnvironmentObject private var buttonController: iPlayrButtonController
-    @EnvironmentObject private var theme: ThemeManager
+    @Environment(iPlayrButtonController.self) private var buttonController
+    @Environment(ThemeManager.self) private var theme
 
     var body: some View {
         GeometryReader { geometry in
@@ -88,7 +88,7 @@ struct iPlayrButtons: View {
     private func makeIconButton(imageName: String, accessibilityLabel: LocalizedStringKey, offsetX: CGFloat = 0, offsetY: CGFloat = 0, action: @escaping () -> Void) -> some View {
         iPlayrIconButton(imageName: imageName, accessibilityLabel: accessibilityLabel, onTapAction: action)
             .offset(x: offsetX, y: offsetY)
-            .environmentObject(theme)
+            .environment(theme)
     }
 
     @ViewBuilder
@@ -102,7 +102,7 @@ struct iPlayrButtons: View {
                         onLongPressStart: onLongPressStart,
                         onLongPressEnd: onLongPressEnd)
             .offset(x: offsetX, y: offsetY)
-            .environmentObject(theme)
+            .environment(theme)
     }
 
     @ViewBuilder
@@ -127,7 +127,7 @@ struct iPlayrIconButton: View {
     let imageName: String
     let accessibilityLabel: LocalizedStringKey
     let onTapAction: () -> Void
-    @EnvironmentObject private var theme: ThemeManager
+    @Environment(ThemeManager.self) private var theme
 
     var body: some View {
         Image(systemName: imageName)
@@ -148,7 +148,7 @@ struct iPlayrSeekButton: View {
     let onTapAction: () -> Void
     let onLongPressStart: () -> Void
     let onLongPressEnd: () -> Void
-    @EnvironmentObject private var theme: ThemeManager
+    @Environment(ThemeManager.self) private var theme
     @State private var isPressed: Bool = false
 
     var body: some View {

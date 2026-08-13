@@ -4,8 +4,8 @@ import Combine
 
 struct RightImageView: View {
     var isActive: Bool = true
-    @EnvironmentObject private var authManager: MusicAuthorizationManager
-    @EnvironmentObject private var libraryStore: MusicLibraryStore
+    @Environment(MusicAuthorizationManager.self) private var authManager
+    @Environment(MusicLibraryStore.self) private var libraryStore
     @State private var currentImageIndex = 0
     @State private var timerCancellable: AnyCancellable?
     @State private var panDirection: PanDirection = .right

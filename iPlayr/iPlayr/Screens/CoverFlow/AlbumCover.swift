@@ -5,7 +5,7 @@ struct AlbumCover: View {
     let album: Album
     let isSelected: Bool
     @Binding var isSongList: Bool
-    @ObservedObject var songListScope: FocusScope
+    var songListScope: FocusScope
     @State private var isFaceUp = false
 
     var body: some View {

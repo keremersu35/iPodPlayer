@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import AudioToolbox
+import Observation
 
 enum ButtonAction: Sendable {
     case menu, forwardEndAlt, backwardEndAlt, playPause, select
@@ -8,20 +9,21 @@ enum ButtonAction: Sendable {
 }
 
 @MainActor
-final class iPlayrButtonController: ObservableObject {
-    @Published private(set) var activeScope: FocusScope?
+@Observable
+final class iPlayrButtonController {
+    private(set) var activeScope: FocusScope?
 
-    private var globalPlaybackHandler: ((ButtonAction) -> Void)?
-    var onMenuLongPress: (() -> Void)?
+    @ObservationIgnored private var globalPlaybackHandler: ((ButtonAction) -> Void)?
+    @ObservationIgnored var onMenuLongPress: (() -> Void)?
 
-    private let selectionFeedback = UISelectionFeedbackGenerator()
-    private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+    @ObservationIgnored private let selectionFeedback = UISelectionFeedbackGenerator()
+    @ObservationIgnored private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
 
     private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: UserDefaultsKeys.hapticsEnabled.rawValue) as? Bool ?? true }
     private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: UserDefaultsKeys.soundsEnabled.rawValue) as? Bool ?? true }
 
-    private var lastInteractionTime: Date = .distantPast
-    private let debounceInterval: TimeInterval = 0.3
+    @ObservationIgnored private var lastInteractionTime: Date = .distantPast
+    @ObservationIgnored private let debounceInterval: TimeInterval = 0.3
 
     init() {
         selectionFeedback.prepare()

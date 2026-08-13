@@ -2,10 +2,10 @@ import SwiftUI
 import MusicKit
 
 struct SignInView: View {
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @EnvironmentObject private var authManager: MusicAuthorizationManager
+    @Environment(iPlayrButtonController.self) private var iPlayrController
+    @Environment(MusicAuthorizationManager.self) private var authManager
     @Environment(\.navigate) private var navigate
-    @StateObject private var scope = FocusScope(id: "login")
+    @State private var scope = FocusScope(id: "login")
     @State private var isShowingModal = false
     @State private var menus: [Menu] = [
         Menu(id: 1, name: String(localized: "Apple Music"), next: true),

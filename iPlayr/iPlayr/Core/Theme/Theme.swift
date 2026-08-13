@@ -34,8 +34,9 @@ enum ThemeType: String, CaseIterable {
 }
 
 @MainActor
-final class ThemeManager: ObservableObject {
-    @Published private(set) var currentTheme: ThemeType
+@Observable
+final class ThemeManager {
+    private(set) var currentTheme: ThemeType
 
     init() {
         let saved = UserDefaults.standard.string(forKey: UserDefaultsKeys.currentTheme.rawValue).flatMap(ThemeType.init)

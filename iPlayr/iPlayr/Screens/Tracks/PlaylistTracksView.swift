@@ -3,10 +3,10 @@ import MusicKit
 
 struct PlaylistTracksView: View {
     let collectionInfo: CollectionInfoModel
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @EnvironmentObject private var libraryStore: MusicLibraryStore
+    @Environment(iPlayrButtonController.self) private var iPlayrController
+    @Environment(MusicLibraryStore.self) private var libraryStore
     @Environment(\.navigate) private var navigate
-    @StateObject private var scope = FocusScope(id: "playlistTracks")
+    @State private var scope = FocusScope(id: "playlistTracks")
     @State private var viewState: ViewState = .loading
     @State private var tracks: [Track] = []
 

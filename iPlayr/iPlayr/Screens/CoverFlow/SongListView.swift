@@ -5,8 +5,8 @@ struct SongListView: View {
     let album: Album
     let isSelected: Bool
     @Binding var isSongList: Bool
-    @ObservedObject var scope: FocusScope
-    @EnvironmentObject private var libraryStore: MusicLibraryStore
+    var scope: FocusScope
+    @Environment(MusicLibraryStore.self) private var libraryStore
     @State private var isLoading = true
     @State private var tracks: [Track] = []
     private var shouldLoad: Bool { isSongList && isSelected }

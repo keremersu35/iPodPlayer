@@ -1,15 +1,17 @@
 import Combine
 import MusicKit
+import Observation
 
 @MainActor
-final class MusicLibraryStore: ObservableObject {
-    @Published private(set) var albums: [Album]?
-    @Published private(set) var playlists: [Playlist]?
-    @Published var errorMessage: String?
+@Observable
+final class MusicLibraryStore {
+    private(set) var albums: [Album]?
+    private(set) var playlists: [Playlist]?
+    var errorMessage: String?
 
-    private let service = MusicLibraryService()
-    private var albumTracksCache: [String: [Track]] = [:]
-    private var playlistTracksCache: [String: [Track]] = [:]
+    @ObservationIgnored private let service = MusicLibraryService()
+    @ObservationIgnored private var albumTracksCache: [String: [Track]] = [:]
+    @ObservationIgnored private var playlistTracksCache: [String: [Track]] = [:]
 
     func loadAlbumsIfNeeded() async {
         guard albums == nil else { return }

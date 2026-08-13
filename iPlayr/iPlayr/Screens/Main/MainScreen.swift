@@ -1,21 +1,21 @@
 import SwiftUI
 
 struct iPlayrView: View {
-    @StateObject private var iPlayrController: iPlayrButtonController = .init()
-    @EnvironmentObject private var theme: ThemeManager
-    @EnvironmentObject private var playerManager: AppleMusicManager
+    @State private var iPlayrController: iPlayrButtonController = .init()
+    @Environment(ThemeManager.self) private var theme
+    @Environment(AppleMusicManager.self) private var playerManager
 
     var body: some View {
         VStack() {
             Spacer()
             iPlayrScreen()
-                .environmentObject(iPlayrController)
+                .environment(iPlayrController)
                 .padding(.horizontal)
-                .environmentObject(theme)
+                .environment(theme)
             Spacer()
             iPlayrButtons()
-                .environmentObject(iPlayrController)
-                .environmentObject(theme)
+                .environment(iPlayrController)
+                .environment(theme)
             Spacer()
         }
         .background(

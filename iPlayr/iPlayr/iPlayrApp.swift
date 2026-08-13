@@ -2,10 +2,10 @@ import SwiftUI
 
 @main
 struct iPlayrApp: App {
-    @StateObject var theme: ThemeManager = .init()
-    @StateObject private var playerManager = AppleMusicManager()
-    @StateObject private var authManager = MusicAuthorizationManager()
-    @StateObject private var libraryStore = MusicLibraryStore()
+    @State var theme: ThemeManager = .init()
+    @State private var playerManager = AppleMusicManager()
+    @State private var authManager = MusicAuthorizationManager()
+    @State private var libraryStore = MusicLibraryStore()
 
     init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -14,10 +14,10 @@ struct iPlayrApp: App {
     var body: some Scene {
         WindowGroup {
             iPlayrView()
-                .environmentObject(theme)
-                .environmentObject(playerManager)
-                .environmentObject(authManager)
-                .environmentObject(libraryStore)
+                .environment(theme)
+                .environment(playerManager)
+                .environment(authManager)
+                .environment(libraryStore)
         }
     }
 }

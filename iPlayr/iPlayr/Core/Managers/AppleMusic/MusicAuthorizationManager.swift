@@ -1,13 +1,15 @@
 import MusicKit
 import UIKit
 import Combine
+import Observation
 
 @MainActor
-final class MusicAuthorizationManager: ObservableObject {
-    @Published private(set) var isAuthorized: Bool = false
-    @Published private(set) var authorizationStatus: MusicAuthorization.Status = .notDetermined
-    
-    private var cancellables = Set<AnyCancellable>()
+@Observable
+final class MusicAuthorizationManager {
+    private(set) var isAuthorized: Bool = false
+    private(set) var authorizationStatus: MusicAuthorization.Status = .notDetermined
+
+    @ObservationIgnored private var cancellables = Set<AnyCancellable>()
     
     init() {
         updateAuthorizationStatus()

@@ -1,13 +1,15 @@
 import Foundation
+import Observation
 
 @MainActor
-final class FocusScope: ObservableObject {
+@Observable
+final class FocusScope {
     let id: String
-    @Published private(set) var selection: Int = 0
-    @Published var itemCount: Int = 0 {
+    private(set) var selection: Int = 0
+    var itemCount: Int = 0 {
         didSet { clampSelection() }
     }
-    var onAction: ((ButtonAction) -> Void)?
+    @ObservationIgnored var onAction: ((ButtonAction) -> Void)?
 
     init(id: String) {
         self.id = id

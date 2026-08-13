@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct ThemeView: View {
-    @EnvironmentObject private var iPlayrController: iPlayrButtonController
+    @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(\.navigate) private var navigate
-    @EnvironmentObject private var theme: ThemeManager
-    @StateObject private var scope = FocusScope(id: "theme")
+    @Environment(ThemeManager.self) private var theme
+    @State private var scope = FocusScope(id: "theme")
     private var menus: [Menu] = [
         .init(id: 0, name: String(localized: "Silver"), next: false),
         .init(id: 1, name: String(localized: "Black"), next: false),

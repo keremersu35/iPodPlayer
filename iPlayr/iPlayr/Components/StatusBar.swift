@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct StatusBar: View {
-    @EnvironmentObject private var playerManager: AppleMusicManager
+    @Environment(AppleMusicManager.self) private var playerManager
     var title: String
-    
+    @State private var batteryLevel = UIDevice.current.batteryLevel
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .center) {
@@ -19,7 +20,7 @@ struct StatusBar: View {
                     Spacer()
                         .frame(width: 8)
                 }
-                BatteryIconView(level: CGFloat(UIDevice.current.batteryLevel))
+                BatteryIconView(level: CGFloat(batteryLevel))
                     .frame(width: 28, height: 14)
             }
             .padding(.horizontal, 8)
@@ -40,6 +41,9 @@ struct StatusBar: View {
                 .fill(.statusBarDivider)
                 .frame(maxWidth: .infinity, maxHeight: 1)
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIDevice.batteryLevelDidChangeNotification)) { _ in
+            batteryLevel = UIDevice.current.batteryLevel
+        }
     }
 }
 
@@ -49,13 +53,13 @@ struct BatteryIconView: View {
                                               .batteryFill5, .batteryFill6, .batteryFill7, .batteryFill8,
                                               .batteryFill9, .batteryFill10, .batteryFill11, .batteryFill12]
     private let batteryEmpty: [Color] = [.batteryEmpty1,.batteryEmpty2,.batteryEmpty3]
-    
+
     var body: some View {
         ZStack(alignment: .leading) {
             Rectangle()
                 .stroke(.black.opacity(0.8), lineWidth: 0.5)
                 .frame(width: 24, height: 12)
-            
+
             Rectangle()
                 .fill(
                     LinearGradient(
@@ -65,7 +69,7 @@ struct BatteryIconView: View {
                     )
                 )
                 .frame(width: 24, height: 12)
-            
+
             Rectangle()
                 .fill(
                     LinearGradient(
@@ -75,7 +79,7 @@ struct BatteryIconView: View {
                     )
                 )
                 .frame(width: max(0, 24 * level), height: 12)
-            
+
             Rectangle()
                 .fill(
                     level == 1
