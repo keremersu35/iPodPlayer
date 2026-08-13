@@ -6,7 +6,6 @@ struct AlbumTracksView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var libraryStore: MusicLibraryStore
     @Environment(\.navigate) private var navigate
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var scope = FocusScope(id: "albumTracks")
     @State private var viewState: ViewState = .loading
     @State private var tracks: [Track] = []
@@ -78,9 +77,12 @@ struct AlbumTracksView: View {
 
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
-        case .menu: dismiss()
-        case .select: navigation()
-        default: break
+        case .menu:
+            navigate(.pop)
+        case .select:
+            navigation()
+        default:
+            break
         }
     }
 
@@ -88,5 +90,4 @@ struct AlbumTracksView: View {
         let id = collectionInfo.id
         navigate(.push(.player(id: id, trackIndex: scope.selection)))
     }
-
 }

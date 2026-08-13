@@ -4,7 +4,7 @@ import MusicKit
 struct SignInView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var authManager: MusicAuthorizationManager
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.navigate) private var navigate
     @StateObject private var scope = FocusScope(id: "login", showsRightView: true)
     @State private var isShowingModal = false
     @State private var menus: [Menu] = [
@@ -37,7 +37,7 @@ struct SignInView: View {
         scope.onAction = { action in
             switch action {
             case .menu:
-                dismiss()
+                navigate(.pop)
             case .select:
                 Task { await handleAppleMusicSignIn() }
             default:
@@ -57,7 +57,7 @@ struct SignInView: View {
 
         let granted = await authManager.requestAuthorization()
         if granted {
-            dismiss()
+            navigate(.pop)
         }
     }
 

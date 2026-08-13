@@ -3,7 +3,6 @@ import SwiftUI
 struct MusicListView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @Environment(\.navigate) private var navigate
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var scope = FocusScope(id: "music", showsRightView: true)
     private var menus: [Menu] = [
         .init(id: 0, name: String(localized: "Cover Flow"), next: true),
@@ -33,7 +32,7 @@ struct MusicListView: View {
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
         case .menu:
-            dismiss()
+            navigate(.pop)
         case .select:
             navigation()
         default: break

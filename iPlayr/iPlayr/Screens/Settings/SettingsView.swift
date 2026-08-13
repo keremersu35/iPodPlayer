@@ -3,7 +3,6 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @Environment(\.navigate) private var navigate
-    @Environment(\.dismiss) private var dismiss
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
     @StateObject private var scope = FocusScope(id: "settings", showsRightView: true)
@@ -38,7 +37,7 @@ struct SettingsView: View {
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
         case .menu:
-            dismiss()
+            navigate(.pop)
         case .select:
             handleSelect()
         default:

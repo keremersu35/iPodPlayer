@@ -3,12 +3,14 @@ import SwiftUI
 
 enum NavigationType: Hashable, Sendable {
     case push(Route)
+    case pop
 }
 
 struct NavigateAction: Sendable {
-    typealias Action = @Sendable (NavigationType) -> ()
+    typealias Action = @MainActor @Sendable (NavigationType) -> Void
     let action: Action
 
+    @MainActor
     func callAsFunction(_ navigationType: NavigationType) {
         action(navigationType)
     }
@@ -19,7 +21,7 @@ struct NavigationEnvironmentKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    var navigate: (NavigateAction) {
+    var navigate: NavigateAction {
         get { self[NavigationEnvironmentKey.self] }
         set { self[NavigationEnvironmentKey.self] = newValue }
     }
@@ -42,6 +44,14 @@ enum Route: Hashable, Identifiable, Sendable {
 }
 
 extension Route {
+    var isFullScreen: Bool {
+        switch self {
+        case .home, .music, .settings, .signIn, .theme:
+            return false
+        case .playlists, .albums, .playlistTracks, .albumTracks, .coverFlow, .player:
+            return true
+        }
+    }
 
     @MainActor @ViewBuilder
     var destination: some View {

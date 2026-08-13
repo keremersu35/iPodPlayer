@@ -9,7 +9,7 @@ struct PlayerView: View {
     var initialArtwork: Artwork?
     var onDismissFromCoverFlow: (() -> Void)? = nil
     @State private var activeArtwork: Artwork?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.navigate) private var navigate
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var playerManager: AppleMusicManager
     @StateObject private var scope = FocusScope(id: "player")
@@ -166,7 +166,7 @@ struct PlayerView: View {
                 if isFromCoverFlow {
                     onDismissFromCoverFlow?()
                 } else {
-                    dismiss()
+                    navigate(.pop)
                 }
             case .select:
                 break
@@ -260,10 +260,7 @@ struct SongProgressView: View {
         return min(1.0, playerManager.currentPlaybackTime / currentDuration)
     }
 
-    /// The bar interpolates smoothly while playing; when paused there's nothing to
-    /// animate, so the timeline all but stops ticking instead of spinning for no reason.
     private var barUpdateInterval: TimeInterval { playerManager.isPlaying ? 0.1 : 3600 }
-    /// The elapsed/remaining labels only visually change once a second.
     private var textUpdateInterval: TimeInterval { playerManager.isPlaying ? 1 : 3600 }
 
     var body: some View {

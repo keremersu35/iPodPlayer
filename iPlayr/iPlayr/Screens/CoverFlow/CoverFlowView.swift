@@ -4,8 +4,8 @@ import MusicKit
 struct CoverFlowView: View {
     @EnvironmentObject var iPlayrController: iPlayrButtonController
     @EnvironmentObject private var libraryStore: MusicLibraryStore
+    @Environment(\.navigate) private var navigate
     @State private var scrollAnimator = CoverFlowScrollAnimator()
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var carouselScope = FocusScope(id: "coverFlow")
     @StateObject private var songListScope = FocusScope(id: "coverFlowSongList")
 
@@ -25,9 +25,6 @@ struct CoverFlowView: View {
 
     private var scrollOffset: CGFloat { scrollAnimator.scrollOffset }
 
-    /// Only covers within `windowRadius` of the selection are rendered — with a large
-    /// library, rendering every cover (most of them offscreen) is the single biggest
-    /// cost in this view.
     private var visibleAlbums: [(index: Int, album: Album)] {
         guard !albums.isEmpty else { return [] }
         let lower = max(0, selectedIndex - CoverFlowMetrics.windowRadius)
@@ -140,16 +137,12 @@ struct CoverFlowView: View {
             }
     }
 
-    // MARK: - Navigation
-
     private func navigateTo(_ index: Int) {
         carouselScope.select(index)
         scrollAnimator.jumpTo(scrollOffset + dragOffset)
         dragOffset = 0
         scrollAnimator.animateTo(-CGFloat(index) * itemStep)
     }
-
-    // MARK: - Transform
 
     private func relativeOffset(for index: Int) -> CGFloat {
         (CGFloat(index) * itemStep + scrollOffset + dragOffset) / itemStep
@@ -172,8 +165,6 @@ struct CoverFlowView: View {
         (2 - abs(Double(offset))) * 10
     }
 
-    // MARK: - Data
-
     private func loadAlbums() async {
         viewState = .loading
         await libraryStore.loadAlbumsIfNeeded()
@@ -193,14 +184,10 @@ struct CoverFlowView: View {
         }
     }
 
-    // MARK: - Lifecycle
-
     private func setup() {
         carouselScope.onAction = { handleButtonAction($0) }
         iPlayrController.activate(carouselScope)
     }
-
-    // MARK: - Button Actions
 
     private func handleButtonAction(_ action: ButtonAction) {
         switch action {
@@ -220,14 +207,13 @@ struct CoverFlowView: View {
             isSongList = false
             configureController()
         } else {
-            dismiss()
+            navigate(.pop)
         }
     }
 
     private func handleSelectAction() {
         if isSongList && iPlayrController.activeScope === songListScope {
             let trackIndex = songListScope.selection
-            // Wait for the flip animation to finish before loading PlayerView
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 playerViewId = UUID()
                 selectedTrackIndex = trackIndex

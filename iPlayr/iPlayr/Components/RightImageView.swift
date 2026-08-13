@@ -9,22 +9,25 @@ struct RightImageView: View {
     @State private var timerCancellable: AnyCancellable?
     @State private var panDirection: PanDirection = .right
 
-    private let transitionDuration: Double = 2
-    private let imageDuration: Double = 8
+    private let transitionDuration: Double = 1.5
+    private let imageDuration: Double = 6.0
 
     var body: some View {
-        ZStack {
-            Color.blue.opacity(0.3)
-                .ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack {
+                Color.black
 
-            if !authManager.isAuthorized {
-                unauthorizedView
-            } else if let images = libraryStore.albums?.compactMap({ $0.artwork }),
-                      !images.isEmpty {
-                artworkSlideshow(images)
-            } else {
-                noMusicView
+                if !authManager.isAuthorized {
+                    unauthorizedView
+                } else if let images = libraryStore.albums?.compactMap({ $0.artwork }),
+                          !images.isEmpty {
+                    artworkSlideshow(images, size: proxy.size)
+                } else {
+                    noMusicView
+                }
             }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
         }
         .task { await loadAlbumsIfAuthorized() }
         .onChange(of: authManager.isAuthorized) { _, isAuthorized in
@@ -56,15 +59,18 @@ struct RightImageView: View {
         }
     }
 
-    private func artworkSlideshow(_ images: [Artwork]) -> some View {
-        ZStack {
+    private func artworkSlideshow(_ images: [Artwork], size: CGSize) -> some View {
+        let dimension = max(size.width, size.height) * 1.3
+        return ZStack {
             if currentImageIndex >= 0 && currentImageIndex < images.count {
-                ArtworkImage(images[currentImageIndex], width: 300, height: 300)
+                ArtworkImage(images[currentImageIndex], width: CGFloat(Int(dimension)), height: CGFloat(Int(dimension)))
                     .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .modifier(PanEffect(
+                    .frame(width: size.width, height: size.height)
+                    .scaleEffect(1.2)
+                    .modifier(DynamicPanEffect(
                         duration: imageDuration + transitionDuration,
-                        direction: panDirection
+                        direction: panDirection,
+                        maxOffset: size.width * 0.08
                     ))
                     .id("\(currentImageIndex)-\(panDirection.rawValue)")
                     .transition(.opacity)
@@ -115,23 +121,18 @@ enum PanDirection: String, CaseIterable {
     case right
 }
 
-struct PanEffect: ViewModifier {
+struct DynamicPanEffect: ViewModifier {
     let duration: Double
     let direction: PanDirection
+    let maxOffset: CGFloat
     @State private var offset: CGFloat = 0
 
     private var startOffset: CGFloat {
-        switch direction {
-        case .right: return -90
-        case .left: return -30
-        }
+        direction == .right ? -maxOffset : maxOffset
     }
 
     private var endOffset: CGFloat {
-        switch direction {
-        case .right: return -60
-        case .left: return -60
-        }
+        direction == .right ? maxOffset : -maxOffset
     }
 
     func body(content: Content) -> some View {

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ThemeView: View {
     @EnvironmentObject private var iPlayrController: iPlayrButtonController
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.navigate) private var navigate
     @EnvironmentObject private var theme: ThemeManager
     @StateObject private var scope = FocusScope(id: "theme", showsRightView: true)
     private var menus: [Menu] = [
@@ -29,7 +29,7 @@ struct ThemeView: View {
         scope.onAction = { action in
             switch action {
             case .menu:
-                dismiss()
+                navigate(.pop)
             case .select:
                 setTheme()
             default:
