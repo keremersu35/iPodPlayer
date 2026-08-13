@@ -20,7 +20,7 @@ struct AlbumsView: View {
             }
         }
         .shadowedBackground()
-        .taskAfterPush { await loadAlbums() }
+        .taskAfterNavigation { await loadAlbums() }
         .onAppear(perform: setup)
     }
 

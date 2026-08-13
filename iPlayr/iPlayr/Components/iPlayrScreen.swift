@@ -2,16 +2,14 @@ import SwiftUI
 
 struct iPlayrScreen: View {
     private static let screenHeight: CGFloat = 300
-    private static let pushAnimation: Animation = .easeInOut(duration: NavigationTiming.pushDuration)
+    private static let pushAnimation: Animation = .easeInOut(duration: 0.28)
 
-    @State private var menuStack: [Route] = [.home]
-    @State private var fullScreenStack: [Route] = []
-    @State private var menuDepth: Int = 1
-    @State private var fullScreenDepth: Int = 0
-    @State private var scopeStack: [FocusScope?] = []
-    @Environment(iPlayrButtonController.self) var iPlayrController
+    @State private var menu = NavigationLayer(root: .home)
+    @State private var fullScreen = NavigationLayer()
+    @State private var isNavigating = false
+    @Environment(iPlayrButtonController.self) private var iPlayrController
 
-    private var isFullScreen: Bool { fullScreenDepth > 0 }
+    private var isFullScreen: Bool { !fullScreen.isEmpty }
 
     var body: some View {
         GeometryReader { geometry in
@@ -24,6 +22,7 @@ struct iPlayrScreen: View {
                         .foregroundColor(.screenFrame)
                 )
         }
+        .environment(\.isNavigating, isNavigating)
         .onNavigate(handleNavigation)
         .onAppear {
             iPlayrController.onMenuLongPress = { handleNavigation(.popToRoot) }
@@ -35,10 +34,8 @@ struct iPlayrScreen: View {
         let halfWidth = fullWidth / 2
 
         return ZStack {
-            stackLayer(fullScreenStack, depth: fullScreenDepth, width: fullWidth) {
-                withAnimation(Self.pushAnimation) { fullScreenDepth = fullScreenStack.count }
-            }
-            .zIndex(1)
+            layerView($fullScreen, width: fullWidth)
+                .zIndex(1)
 
             splitScreenView(width: fullWidth, halfWidth: halfWidth)
                 .zIndex(2)
@@ -49,10 +46,8 @@ struct iPlayrScreen: View {
 
     private func splitScreenView(width: CGFloat, halfWidth: CGFloat) -> some View {
         HStack(spacing: 0) {
-            stackLayer(menuStack, depth: menuDepth, width: halfWidth) {
-                withAnimation(Self.pushAnimation) { menuDepth = menuStack.count }
-            }
-            .offset(x: isFullScreen ? -halfWidth : 0)
+            layerView($menu, width: halfWidth)
+                .offset(x: isFullScreen ? -halfWidth : 0)
 
             RightImageView(isActive: !isFullScreen)
                 .frame(width: halfWidth, height: Self.screenHeight)
@@ -62,17 +57,16 @@ struct iPlayrScreen: View {
         .frame(width: width, height: Self.screenHeight)
     }
 
-    private func stackLayer(_ stack: [Route], depth: Int, width: CGFloat,
-                            advance: @escaping () -> Void) -> some View {
+    private func layerView(_ layer: Binding<NavigationLayer>, width: CGFloat) -> some View {
         ZStack {
-            ForEach(Array(stack.enumerated()), id: \.offset) { index, route in
-                route.destination
+            ForEach(Array(layer.wrappedValue.entries.enumerated()), id: \.element.id) { index, entry in
+                entry.route.destination
                     .frame(width: width, height: Self.screenHeight)
-                    .offset(x: CGFloat(index - depth + 1) * width)
+                    .offset(x: layer.wrappedValue.offset(forEntryAt: index, width: width))
                     .zIndex(Double(index))
                     .onAppear {
-                        guard index == stack.count - 1, depth < stack.count else { return }
-                        advance()
+                        guard layer.wrappedValue.isTopEntry(at: index) else { return }
+                        settle(layer)
                     }
             }
         }
@@ -80,53 +74,53 @@ struct iPlayrScreen: View {
         .clipped()
     }
 
-    private func handleNavigation(_ navigationType: NavigationType) {
-        switch navigationType {
-        case .push(let route):
-            scopeStack.append(iPlayrController.activeScope)
-            if route.isFullScreen {
-                fullScreenStack.append(route)
-            } else {
-                menuStack.append(route)
-            }
-
-        case .pop:
-            guard isFullScreen || menuDepth > 1 else { return }
-            withAnimation(Self.pushAnimation) {
-                if isFullScreen {
-                    fullScreenDepth -= 1
-                } else {
-                    menuDepth -= 1
-                }
-            } completion: {
-                trimStacks()
-            }
-            if let saved = scopeStack.popLast(), let scope = saved {
-                iPlayrController.activate(scope)
-            }
-
-        case .popToRoot:
-            guard isFullScreen || menuDepth > 1 else { return }
-            withAnimation(Self.pushAnimation) {
-                fullScreenDepth = 0
-                menuDepth = 1
-            } completion: {
-                trimStacks()
-            }
-            if let rootScope = scopeStack.first ?? nil {
-                iPlayrController.activate(rootScope)
-            }
-            scopeStack.removeAll()
+    private func settle(_ layer: Binding<NavigationLayer>) {
+        guard layer.wrappedValue.isSettlePending else { return }
+        withAnimation(Self.pushAnimation) {
+            layer.wrappedValue.settle()
+        } completion: {
+            isNavigating = false
         }
     }
 
-    private func trimStacks() {
-        if fullScreenStack.count > fullScreenDepth {
-            fullScreenStack = Array(fullScreenStack.prefix(fullScreenDepth))
+    private func handleNavigation(_ navigationType: NavigationType) {
+        switch navigationType {
+        case .push(let route):
+            isNavigating = true
+            let layer = route.isFullScreen ? $fullScreen : $menu
+            layer.wrappedValue.push(route, restoreScope: iPlayrController.activeScope)
+
+        case .pop:
+            pop(isFullScreen ? $fullScreen : $menu)
+
+        case .popToRoot:
+            guard fullScreen.canPop || menu.canPop else { return }
+            let restoreScope = menu.rootRestoreScope ?? fullScreen.rootRestoreScope
+            withAnimation(Self.pushAnimation) {
+                fullScreen.popToRoot()
+                menu.popToRoot()
+            } completion: {
+                fullScreen.trim()
+                menu.trim()
+            }
+            activate(restoreScope)
         }
-        if menuStack.count > menuDepth {
-            menuStack = Array(menuStack.prefix(menuDepth))
+    }
+
+    private func pop(_ layer: Binding<NavigationLayer>) {
+        guard layer.wrappedValue.canPop else { return }
+        let restoreScope = layer.wrappedValue.topRestoreScope
+        withAnimation(Self.pushAnimation) {
+            layer.wrappedValue.pop()
+        } completion: {
+            layer.wrappedValue.trim()
         }
+        activate(restoreScope)
+    }
+
+    private func activate(_ scope: FocusScope?) {
+        guard let scope else { return }
+        iPlayrController.activate(scope)
     }
 }
 

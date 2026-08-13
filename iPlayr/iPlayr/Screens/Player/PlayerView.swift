@@ -50,22 +50,23 @@ struct PlayerView: View {
                 isScaleAnimation = false
             }
             setupButtonListener()
-            guard let id, let trackIndex else { return }
-            Task {
-                try? await Task.sleep(for: .seconds(NavigationTiming.pushDuration))
-                do {
-                    if isFromPlaylist {
-                        try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
-                    } else {
-                        try await playerManager.playAlbum(id: id, fromIndex: trackIndex)
-                    }
-                } catch {
-                    playbackErrorMessage = error.localizedDescription
-                }
-            }
         }
+        .taskAfterNavigation { await startPlayback() }
         .onDisappear {
             stopSeeking()
+        }
+    }
+
+    private func startPlayback() async {
+        guard let id, let trackIndex else { return }
+        do {
+            if isFromPlaylist {
+                try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
+            } else {
+                try await playerManager.playAlbum(id: id, fromIndex: trackIndex)
+            }
+        } catch {
+            playbackErrorMessage = error.localizedDescription
         }
     }
 

@@ -61,7 +61,7 @@ struct CoverFlowView: View {
             .frame(maxHeight: .infinity)
             .background(Color.white)
         }
-        .taskAfterPush { await loadAlbums() }
+        .taskAfterNavigation { await loadAlbums() }
         .onAppear(perform: setup)
         .onChange(of: carouselScope.selection) { _, newIndex in
             scrollAnimator.jumpTo(scrollOffset + dragOffset)

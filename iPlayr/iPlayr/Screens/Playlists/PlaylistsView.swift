@@ -18,7 +18,7 @@ struct PlaylistsView: View {
             }
         }
         .shadowedBackground()
-        .taskAfterPush { await loadPlaylists() }
+        .taskAfterNavigation { await loadPlaylists() }
         .onAppear(perform: setup)
     }
 

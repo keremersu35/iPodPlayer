@@ -22,7 +22,7 @@ struct AlbumTracksView: View {
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .taskAfterPush { await loadTracks() }
+        .taskAfterNavigation { await loadTracks() }
     }
 
     private func loadTracks() async {

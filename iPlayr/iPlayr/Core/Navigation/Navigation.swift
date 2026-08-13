@@ -1,19 +1,6 @@
 import Foundation
 import SwiftUI
 
-enum NavigationTiming {
-    static let pushDuration: Double = 0.28
-}
-
-extension View {
-    func taskAfterPush(_ action: @escaping @MainActor @Sendable () async -> Void) -> some View {
-        task {
-            try? await Task.sleep(for: .seconds(NavigationTiming.pushDuration))
-            await action()
-        }
-    }
-}
-
 enum NavigationType: Hashable, Sendable {
     case push(Route)
     case pop
@@ -34,10 +21,39 @@ struct NavigationEnvironmentKey: EnvironmentKey {
     static let defaultValue: NavigateAction = NavigateAction(action: { _ in })
 }
 
+struct IsNavigatingEnvironmentKey: EnvironmentKey {
+    static let defaultValue: Bool = false
+}
+
 extension EnvironmentValues {
     var navigate: NavigateAction {
         get { self[NavigationEnvironmentKey.self] }
         set { self[NavigationEnvironmentKey.self] = newValue }
+    }
+
+    var isNavigating: Bool {
+        get { self[IsNavigatingEnvironmentKey.self] }
+        set { self[IsNavigatingEnvironmentKey.self] = newValue }
+    }
+}
+
+extension View {
+    func taskAfterNavigation(_ action: @escaping @MainActor @Sendable () async -> Void) -> some View {
+        modifier(TaskAfterNavigation(action: action))
+    }
+}
+
+private struct TaskAfterNavigation: ViewModifier {
+    @Environment(\.isNavigating) private var isNavigating
+    @State private var hasRun = false
+    let action: @MainActor @Sendable () async -> Void
+
+    func body(content: Content) -> some View {
+        content.task(id: isNavigating) {
+            guard !isNavigating, !hasRun else { return }
+            hasRun = true
+            await action()
+        }
     }
 }
 
