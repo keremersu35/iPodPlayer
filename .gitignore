@@ -62,3 +62,6 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 .DS_Store
 iPlayr/iPlayr.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# Tooling
+.serena/
