@@ -101,7 +101,6 @@ struct PlayerView: View {
                                 .reflection()
                                 .rotation3DEffect(.degrees(currentDegree), axis: (x: 0, y: 1, z: 0))
                                 .scaleEffect(isScaleAnimation ? 1.2 : 1)
-                                .id(playerManager.currentTrack?.title ?? "")
                                 .onAppear {
                                     guard isFromCoverFlow else { return }
                                     isScaleAnimation = true
