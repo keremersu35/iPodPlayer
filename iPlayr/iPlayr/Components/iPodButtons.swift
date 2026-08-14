@@ -1,10 +1,20 @@
 import SwiftUI
 
+@MainActor
+final class WheelTracker {
+    var lastAngle: CGFloat?
+    var counter: CGFloat = 0
+
+    func reset() {
+        lastAngle = nil
+        counter = 0
+    }
+}
+
 struct iPlayrButtons: View {
     private static let wheelDiameterRatio: CGFloat = 0.79
 
-    @State private var lastAngle: CGFloat?
-    @State private var counter: CGFloat = 0
+    @State private var wheel = WheelTracker()
     @Environment(iPlayrButtonController.self) private var buttonController
     @Environment(ThemeManager.self) private var theme
 
@@ -53,34 +63,33 @@ struct iPlayrButtons: View {
     
     private func dragGesture(in size: CGFloat) -> some Gesture {
         let center = size * Self.wheelDiameterRatio / 2
-        return DragGesture()
+        return DragGesture(minimumDistance: 0)
             .onChanged { v in
                 var angle = atan2(v.location.x - center, center - v.location.y) * 180 / .pi
                 if angle < 0 { angle += 360 }
 
-                guard let previousAngle = lastAngle else {
-                    lastAngle = angle
+                guard let previousAngle = wheel.lastAngle else {
+                    wheel.lastAngle = angle
                     return
                 }
 
                 var theta = previousAngle - angle
                 if theta > 180 { theta -= 360 }
                 if theta < -180 { theta += 360 }
-                lastAngle = angle
+                wheel.lastAngle = angle
 
-                counter += theta
+                wheel.counter += theta
 
-                if counter > 30 {
+                if wheel.counter > 30 {
                     buttonController.scrollUp()
-                } else if counter < -30 {
+                } else if wheel.counter < -30 {
                     buttonController.scrollDown()
                 }
 
-                if abs(counter) > 30 { counter = 0 }
+                if abs(wheel.counter) > 30 { wheel.counter = 0 }
             }
             .onEnded { _ in
-                lastAngle = nil
-                counter = 0
+                wheel.reset()
             }
     }
     
