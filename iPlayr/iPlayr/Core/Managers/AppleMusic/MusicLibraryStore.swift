@@ -31,6 +31,14 @@ final class MusicLibraryStore {
         }
     }
 
+    func cachedAlbumTracks(id: String) -> [Track]? {
+        albumTracksCache[id]
+    }
+
+    func cachedPlaylistTracks(id: String) -> [Track]? {
+        playlistTracksCache[id]
+    }
+
     func albumTracks(id: String) async -> [Track]? {
         if let cached = albumTracksCache[id] { return cached }
         do {

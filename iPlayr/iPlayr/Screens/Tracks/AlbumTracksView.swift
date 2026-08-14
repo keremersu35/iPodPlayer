@@ -25,7 +25,15 @@ struct AlbumTracksView: View {
         .taskAfterNavigation { await loadTracks() }
     }
 
+    private func applyCachedTracks() {
+        guard let cached = libraryStore.cachedAlbumTracks(id: collectionInfo.id), !cached.isEmpty else { return }
+        tracks = cached
+        scope.configure(itemCount: cached.count)
+        viewState = .content
+    }
+
     private func loadTracks() async {
+        guard viewState != .content else { return }
         viewState = .loading
         let fetchedTracks = await libraryStore.albumTracks(id: collectionInfo.id)
 
@@ -72,6 +80,7 @@ struct AlbumTracksView: View {
     private func setup() {
         scope.onAction = { handleButtonAction($0) }
         iPlayrController.activate(scope)
+        applyCachedTracks()
     }
 
     private func handleButtonAction(_ action: ButtonAction) {

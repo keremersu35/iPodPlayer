@@ -24,7 +24,14 @@ struct AlbumsView: View {
         .onAppear(perform: setup)
     }
 
+    private func applyCachedCollections() {
+        guard let albums = libraryStore.albums, !albums.isEmpty else { return }
+        scope.configure(itemCount: albums.count)
+        viewState = .content
+    }
+
     private func loadAlbums() async {
+        guard viewState != .content else { return }
         viewState = .loading
         await libraryStore.loadAlbumsIfNeeded()
 
@@ -71,6 +78,7 @@ struct AlbumsView: View {
     private func setup() {
         scope.onAction = { handleButtonAction($0) }
         iPlayrController.activate(scope)
+        applyCachedCollections()
     }
 
     private func handleButtonAction(_ action: ButtonAction) {
