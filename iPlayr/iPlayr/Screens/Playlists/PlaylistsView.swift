@@ -1,93 +1,24 @@
 import SwiftUI
 
 struct PlaylistsView: View {
-    @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(MusicLibraryStore.self) private var libraryStore
     @Environment(\.navigate) private var navigate
-    @State private var scope = FocusScope(id: "playlists")
-    @State private var viewState: ViewState = .loading
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: String(localized: "Playlists"))
-            ZStack {
-                if viewState == .content {
-                    playlistScrollView
-                }
-                StateView(state: viewState)
+        LibraryListView(
+            title: String(localized: "Playlists"),
+            scopeID: "playlists",
+            emptyMessage: String(localized: "No playlists found\nCreate some playlists to get started"),
+            cached: { libraryStore.playlists },
+            load: {
+                await libraryStore.loadPlaylistsIfNeeded()
+                return libraryStore.playlists
+            },
+            onSelect: { playlist, _ in
+                navigate(.push(.playlistTracks(playlist: CollectionInfoModel(id: playlist.id.rawValue, title: playlist.name))))
             }
+        ) { playlist, isSelected in
+            CollectionMenuItem(model: playlist.toCollectionMenuModel(), isSelected: isSelected)
         }
-        .shadowedBackground()
-        .taskAfterNavigation { await loadPlaylists() }
-        .onAppear(perform: setup)
-    }
-
-    private func applyCachedCollections() {
-        guard let playlists = libraryStore.playlists, !playlists.isEmpty else { return }
-        scope.configure(itemCount: playlists.count)
-        viewState = .content
-    }
-
-    private func loadPlaylists() async {
-        guard viewState != .content else { return }
-        viewState = .loading
-        await libraryStore.loadPlaylistsIfNeeded()
-
-        if let playlists = libraryStore.playlists {
-            if playlists.isEmpty {
-                viewState = .empty(message: String(localized: "No playlists found\nCreate some playlists to get started"))
-            } else {
-                scope.configure(itemCount: playlists.count)
-                viewState = .content
-            }
-        } else {
-            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again later"))
-        }
-    }
-
-    @ViewBuilder
-    private var playlistScrollView: some View {
-        ScrollViewReader { scrollViewProxy in
-            let savedPlaylists = libraryStore.playlists ?? []
-            let indexedPlaylists = Array(savedPlaylists.enumerated())
-            List(indexedPlaylists, id: \.offset) { index, playlist in
-                CollectionMenuItem(
-                    model: playlist.toCollectionMenuModel(),
-                    isSelected: index == scope.selection
-                )
-                .id(index)
-                .listRowInsets(EdgeInsets())
-            }
-            .listStyle(.plain)
-            .onChange(of: scope.selection) { _, newIndex in
-                scrollViewProxy.scrollTo(newIndex)
-            }
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    scrollViewProxy.scrollTo(scope.selection)
-                }
-            }
-        }
-    }
-
-    private func setup() {
-        scope.onAction = { handleButtonAction($0) }
-        iPlayrController.activate(scope)
-        applyCachedCollections()
-    }
-
-    private func handleButtonAction(_ action: ButtonAction) {
-        switch action {
-        case .menu: navigate(.pop)
-        case .select: navigation()
-        default: break
-        }
-    }
-
-    private func navigation() {
-        guard let playlists = libraryStore.playlists, scope.selection < playlists.count else { return }
-        let id = playlists[scope.selection].id
-        let playlistName = playlists[scope.selection].name
-        navigate(.push(.playlistTracks(id: id.rawValue, playlistName: playlistName)))
     }
 }

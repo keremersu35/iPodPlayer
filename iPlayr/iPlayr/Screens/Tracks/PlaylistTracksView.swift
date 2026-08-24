@@ -1,98 +1,22 @@
 import SwiftUI
-import MusicKit
 
 struct PlaylistTracksView: View {
-    let collectionInfo: CollectionInfoModel
-    @Environment(iPlayrButtonController.self) private var iPlayrController
+    let playlist: CollectionInfoModel
     @Environment(MusicLibraryStore.self) private var libraryStore
     @Environment(\.navigate) private var navigate
-    @State private var scope = FocusScope(id: "playlistTracks")
-    @State private var viewState: ViewState = .loading
-    @State private var tracks: [Track] = []
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            StatusBar(title: collectionInfo.title)
-            ZStack {
-                if viewState == .content {
-                    tracksScrollView
-                }
-                StateView(state: viewState)
+        LibraryListView(
+            title: playlist.title,
+            scopeID: "playlistTracks",
+            emptyMessage: String(localized: "No tracks found in this playlist\nAdd some tracks to get started"),
+            cached: { libraryStore.cachedPlaylistTracks(id: playlist.id) },
+            load: { await libraryStore.playlistTracks(id: playlist.id) },
+            onSelect: { _, index in
+                navigate(.push(.player(source: .playlist(id: playlist.id), trackIndex: index)))
             }
+        ) { track, isSelected in
+            CollectionMenuItem(model: track.toCollectionMenuModel(), isSelected: isSelected)
         }
-        .shadowedBackground()
-        .onAppear(perform: setup)
-        .taskAfterNavigation { await loadTracks() }
-    }
-
-    private func applyCachedTracks() {
-        guard let cached = libraryStore.cachedPlaylistTracks(id: collectionInfo.id), !cached.isEmpty else { return }
-        tracks = cached
-        scope.configure(itemCount: cached.count)
-        viewState = .content
-    }
-
-    private func loadTracks() async {
-        guard viewState != .content else { return }
-        viewState = .loading
-        let fetchedTracks = await libraryStore.playlistTracks(id: collectionInfo.id)
-
-        if let fetchedTracks {
-            tracks = fetchedTracks
-            if fetchedTracks.isEmpty {
-                viewState = .empty(message: String(localized: "No tracks found in this playlist\nAdd some tracks to get started"))
-            } else {
-                scope.configure(itemCount: fetchedTracks.count)
-                viewState = .content
-            }
-        } else {
-            viewState = .error(message: libraryStore.errorMessage ?? String(localized: "An error occurred\nPlease try again later"))
-        }
-    }
-
-    @ViewBuilder
-    private var tracksScrollView: some View {
-        ScrollViewReader { scrollViewProxy in
-            let indexedTracks = Array(tracks.enumerated())
-            List(indexedTracks, id: \.offset) { index, track in
-                CollectionMenuItem(
-                    model: track.toCollectionMenuModel(),
-                    isSelected: index == scope.selection
-                )
-                .id(index)
-                .listRowInsets(EdgeInsets())
-            }
-            .listStyle(.plain)
-            .onChange(of: scope.selection) { _, newIndex in
-                scrollViewProxy.scrollTo(newIndex)
-            }
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    scrollViewProxy.scrollTo(scope.selection)
-                }
-            }
-        }
-    }
-
-    private func setup() {
-        scope.onAction = { handleButtonAction($0) }
-        iPlayrController.activate(scope)
-        applyCachedTracks()
-    }
-
-    private func handleButtonAction(_ action: ButtonAction) {
-        switch action {
-        case .menu:
-            navigate(.pop)
-        case .select:
-            navigation()
-        default:
-            break
-        }
-    }
-
-    private func navigation() {
-        let id = collectionInfo.id
-        navigate(.push(.player(id: id, trackIndex: scope.selection, isFromPlaylist: true)))
     }
 }

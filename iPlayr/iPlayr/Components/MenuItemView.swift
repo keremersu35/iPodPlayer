@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct Menu: Identifiable, Equatable {
-    let id: Int
+    var id: Int = 0
     let name: String
     let next: Bool
     var value: String? = nil

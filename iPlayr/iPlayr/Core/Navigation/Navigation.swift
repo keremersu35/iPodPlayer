@@ -57,18 +57,35 @@ private struct TaskAfterNavigation: ViewModifier {
     }
 }
 
+enum PlaybackSource: Hashable, Sendable {
+    case album(id: String)
+    case playlist(id: String)
+    case composer(name: String)
+    case allSongs
+    case shuffleAll
+}
+
 enum Route: Hashable, Identifiable, Sendable {
     case music
     case home
     case playlists
-    case playlistTracks(id: String, playlistName: String)
-    case albumTracks(id: String, albumName: String)
+    case artists(genre: CollectionInfoModel?)
+    case albums
+    case songs
+    case genres
+    case composers
+    case artistAlbums(artist: CollectionInfoModel)
+    case playlistTracks(playlist: CollectionInfoModel)
+    case albumTracks(album: CollectionInfoModel)
+    case composerSongs(composer: String)
+    case about
+    case brightness
+    case menuCustomization(isMainMenu: Bool)
     case signIn
     case coverFlow
     case theme
-    case player(id: String, trackIndex: Int, isFromCoverFlow: Bool = false, isFromPlaylist: Bool = false)
+    case player(source: PlaybackSource, trackIndex: Int, isFromCoverFlow: Bool = false)
     case settings
-    case albums
     case nowPlaying
 
     var id: Route { self }
@@ -77,9 +94,12 @@ enum Route: Hashable, Identifiable, Sendable {
 extension Route {
     var isFullScreen: Bool {
         switch self {
-        case .home, .music, .settings, .signIn, .theme:
+        case .home, .music, .settings, .signIn, .theme,
+             .about, .brightness, .menuCustomization:
             return false
-        case .playlists, .albums, .playlistTracks, .albumTracks, .coverFlow, .player, .nowPlaying:
+        case .playlists, .artists, .albums, .songs, .genres, .composers,
+             .artistAlbums, .playlistTracks, .albumTracks, .composerSongs,
+             .coverFlow, .player, .nowPlaying:
             return true
         }
     }
@@ -93,24 +113,42 @@ extension Route {
             HomeListView()
         case .playlists:
             PlaylistsView()
-        case .playlistTracks(let id, let playlistName):
-            PlaylistTracksView(collectionInfo: CollectionInfoModel(id: id, title: playlistName))
+        case .artists(let genre):
+            ArtistsView(genre: genre)
+        case .albums:
+            AlbumsView()
+        case .songs:
+            SongsView()
+        case .genres:
+            GenresView()
+        case .composers:
+            ComposersView()
+        case .artistAlbums(let artist):
+            ArtistAlbumsView(artist: artist)
+        case .playlistTracks(let playlist):
+            PlaylistTracksView(playlist: playlist)
+        case .albumTracks(let album):
+            AlbumTracksView(album: album)
+        case .composerSongs(let composer):
+            ComposerSongsView(composer: composer)
+        case .about:
+            AboutView()
+        case .brightness:
+            BrightnessView()
+        case .menuCustomization(let isMainMenu):
+            MenuCustomizationView(isMainMenu: isMainMenu)
         case .signIn:
             SignInView()
         case .coverFlow:
             CoverFlowView()
         case .theme:
             ThemeView()
-        case .player(let id, let trackIndex, let isFromCoverFlow, let isFromPlaylist):
-            PlayerView(id: id, trackIndex: trackIndex, isFromCoverFlow: isFromCoverFlow, isFromPlaylist: isFromPlaylist)
+        case .player(let source, let trackIndex, let isFromCoverFlow):
+            PlayerView(source: source, trackIndex: trackIndex, isFromCoverFlow: isFromCoverFlow)
         case .nowPlaying:
-            PlayerView(id: nil, trackIndex: nil, isFromCoverFlow: false, isFromPlaylist: false)
+            PlayerView(source: nil, trackIndex: 0, isFromCoverFlow: false)
         case .settings:
             SettingsView()
-        case .albums:
-            AlbumsView()
-        case .albumTracks(id: let id, albumName: let albumName):
-            AlbumTracksView(collectionInfo: CollectionInfoModel(id: id, title: albumName))
         }
     }
 }

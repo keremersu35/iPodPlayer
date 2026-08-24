@@ -3,17 +3,16 @@ import SwiftUI
 struct MusicListView: View {
     @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(MenuPreferences.self) private var menuPreferences
     @Environment(\.navigate) private var navigate
     @State private var scope = FocusScope(id: "music")
 
     private var entries: [(menu: Menu, route: Route)] {
-        var entries: [(menu: Menu, route: Route)] = [
-            (.init(id: 0, name: String(localized: "Cover Flow"), next: true), .coverFlow),
-            (.init(id: 1, name: String(localized: "Playlists"), next: true), .playlists),
-            (.init(id: 2, name: String(localized: "Albums"), next: true), .albums),
-        ]
+        var entries = menuPreferences.musicMenu.map {
+            (Menu(name: $0.title, next: true), $0.route)
+        }
         if playerManager.currentTrack != nil {
-            entries.append((.init(id: 3, name: String(localized: "Now Playing"), next: true), .nowPlaying))
+            entries.append((Menu(name: String(localized: "Now Playing"), next: true), .nowPlaying))
         }
         return entries
     }
@@ -21,10 +20,20 @@ struct MusicListView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: String(localized: "Music"))
-            ForEach(entries.indices, id: \.self) { index in
-                MenuItemView(menu: entries[index].menu, isSelected: scope.selection == index)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(entries.indices, id: \.self) { index in
+                            MenuItemView(menu: entries[index].0, isSelected: scope.selection == index)
+                                .id(index)
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+                .onChange(of: scope.selection) { _, newIndex in
+                    proxy.scrollTo(newIndex)
+                }
             }
-            Spacer()
         }
         .shadowedBackground()
         .onAppear(perform: setup)
@@ -45,7 +54,7 @@ struct MusicListView: View {
             navigate(.pop)
         case .select:
             guard entries.indices.contains(scope.selection) else { return }
-            navigate(.push(entries[scope.selection].route))
+            navigate(.push(entries[scope.selection].1))
         default: break
         }
     }
