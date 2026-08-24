@@ -41,12 +41,11 @@ struct CoverFlowView: View {
                     contentView
                 }
 
-                if isPlayerView {
+                if isPlayerView, albums.indices.contains(selectedIndex) {
                     PlayerView(
-                        id: albums.indices.contains(selectedIndex) ? albums[selectedIndex].id.rawValue : "",
+                        source: .album(id: albums[selectedIndex].id.rawValue),
                         trackIndex: selectedTrackIndex,
                         isFromCoverFlow: true,
-                        isFromPlaylist: false,
                         initialArtwork: albums[selectedIndex].artwork,
                         onDismissFromCoverFlow: handleMenuAction
                     )

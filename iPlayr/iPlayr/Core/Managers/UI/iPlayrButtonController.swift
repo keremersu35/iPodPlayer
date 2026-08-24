@@ -3,7 +3,7 @@ import UIKit
 import AudioToolbox
 import Observation
 
-enum ButtonAction: Sendable {
+enum ButtonAction: Hashable, Sendable {
     case menu, forwardEndAlt, backwardEndAlt, playPause, select
     case forwardLongPress, backwardLongPress, forwardLongPressEnd, backwardLongPressEnd
 }
@@ -65,7 +65,7 @@ final class iPlayrButtonController {
 
         switch action {
         case .playPause, .forwardEndAlt, .backwardEndAlt:
-            if activeScope?.id != "player" {
+            if activeScope?.handledTransportActions.contains(action) != true {
                 globalPlaybackHandler?(action)
             }
         default:

@@ -10,9 +10,12 @@ final class FocusScope {
         didSet { clampSelection() }
     }
     @ObservationIgnored var onAction: ((ButtonAction) -> Void)?
+    @ObservationIgnored var onScroll: ((Int) -> Bool)?
+    @ObservationIgnored let handledTransportActions: Set<ButtonAction>
 
-    init(id: String) {
+    init(id: String, handledTransportActions: Set<ButtonAction> = []) {
         self.id = id
+        self.handledTransportActions = handledTransportActions
     }
 
     func configure(itemCount: Int, selection: Int = 0) {
@@ -27,6 +30,7 @@ final class FocusScope {
 
     @discardableResult
     func moveUp() -> Bool {
+        if let onScroll { return onScroll(-1) }
         guard selection > 0 else { return false }
         selection -= 1
         return true
@@ -34,6 +38,7 @@ final class FocusScope {
 
     @discardableResult
     func moveDown() -> Bool {
+        if let onScroll { return onScroll(1) }
         guard itemCount > 0, selection < itemCount - 1 else { return false }
         selection += 1
         return true

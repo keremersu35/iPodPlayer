@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct StatusBar: View {
+    static let height: CGFloat = 26
+
     @Environment(AppleMusicManager.self) private var playerManager
     var title: String
     @State private var batteryLevel = UIDevice.current.batteryLevel
@@ -25,7 +27,7 @@ struct StatusBar: View {
             }
             .padding(.horizontal, 8)
             .frame(maxWidth: .infinity)
-            .frame(height: 25)
+            .frame(height: Self.height - 1)
             .background(
                 Rectangle()
                     .fill(
@@ -40,7 +42,7 @@ struct StatusBar: View {
                             endPoint: .bottom
                         )
                     )
-                    .frame(maxWidth: .infinity, maxHeight: 25)
+                    .frame(maxWidth: .infinity, maxHeight: Self.height - 1)
             )
             Rectangle()
                 .fill(.statusBarDivider)

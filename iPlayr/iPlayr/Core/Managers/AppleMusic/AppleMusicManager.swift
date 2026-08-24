@@ -6,12 +6,17 @@ import Observation
 @MainActor
 @Observable
 final class AppleMusicManager {
+    private static let queueLimit = 200
+    private static let queueLeadIn = 25
 
     var currentTrack: Song?
     var isPlaying: Bool = false
+    private(set) var shuffleMode: MusicPlayer.ShuffleMode = .off
+    private(set) var repeatMode: MusicPlayer.RepeatMode = .none
     private(set) var isPaused: Bool = false
     private(set) var isLast: Bool = false
     private(set) var isFirst: Bool = false
+    private(set) var queuePosition: String?
 
     @ObservationIgnored private nonisolated(unsafe) let musicPlayer = ApplicationMusicPlayer.shared
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
@@ -73,6 +78,21 @@ final class AppleMusicManager {
         try await startPlayback()
     }
 
+    func playSongs(_ songs: [Song], fromIndex: Int = 0) async throws {
+        guard songs.indices.contains(fromIndex) else {
+            throw MusicPlayerError.invalidTrackIndex(index: fromIndex, totalTracks: songs.count)
+        }
+
+        let start = max(0, fromIndex - Self.queueLeadIn)
+        let end = min(songs.count, start + Self.queueLimit)
+        let window = Array(songs[start..<end])
+
+        currentTrack = nil
+        musicPlayer.queue = ApplicationMusicPlayer.Queue(for: window, startingAt: songs[fromIndex])
+        musicPlayer.state.shuffleMode = .off
+        try await startPlayback()
+    }
+
     /// `prepareToPlay()`/`play()` can intermittently fail right after a queue is
     /// assigned (MPMusicPlayerControllerErrorDomain error 6), seemingly because the
     /// player hasn't caught up with the new queue yet. One short-delayed retry clears
@@ -127,10 +147,33 @@ final class AppleMusicManager {
             .store(in: &cancellables)
     }
 
+    func setShuffleMode(_ mode: MusicPlayer.ShuffleMode) {
+        musicPlayer.state.shuffleMode = mode
+        shuffleMode = mode
+    }
+
+    func setRepeatMode(_ mode: MusicPlayer.RepeatMode) {
+        musicPlayer.state.repeatMode = mode
+        repeatMode = mode
+    }
+
+    func seek(to time: TimeInterval) {
+        guard let duration = currentTrack?.duration else { return }
+        musicPlayer.playbackTime = min(max(time, 0), duration)
+    }
+
     private func updatePlayerState() async {
         let currentPlayingEntryId = musicPlayer.queue.currentEntry?.id
-        isLast = musicPlayer.queue.entries.last?.id == currentPlayingEntryId
-        isFirst = musicPlayer.queue.entries.first?.id == currentPlayingEntryId
+        let entries = musicPlayer.queue.entries
+        isLast = entries.last?.id == currentPlayingEntryId
+        isFirst = entries.first?.id == currentPlayingEntryId
+        if let index = entries.firstIndex(where: { $0.id == currentPlayingEntryId }) {
+            queuePosition = String(localized: "\(index + 1) of \(entries.count)")
+        } else {
+            queuePosition = nil
+        }
+        shuffleMode = musicPlayer.state.shuffleMode ?? .off
+        repeatMode = musicPlayer.state.repeatMode ?? MusicPlayer.RepeatMode.none
         await updateCurrentTrack()
         updatePlaybackStatus()
     }
