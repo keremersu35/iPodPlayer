@@ -6,6 +6,7 @@ struct iPlayrApp: App {
     @State private var playerManager = AppleMusicManager()
     @State private var authManager = MusicAuthorizationManager()
     @State private var libraryStore = MusicLibraryStore()
+    @State private var menuPreferences = MenuPreferences()
 
     init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -18,6 +19,7 @@ struct iPlayrApp: App {
                 .environment(playerManager)
                 .environment(authManager)
                 .environment(libraryStore)
+                .environment(menuPreferences)
         }
     }
 }

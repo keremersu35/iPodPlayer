@@ -5,19 +5,26 @@ struct HomeListView: View {
     @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(MusicAuthorizationManager.self) private var authManager
     @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(MenuPreferences.self) private var menuPreferences
     @Environment(\.navigate) private var navigate
     @State private var scope = FocusScope(id: "home")
 
     private var entries: [(menu: Menu, route: Route)] {
         var entries: [(menu: Menu, route: Route)] = [
-            (.init(id: 0, name: String(localized: "Music"), next: true), .music),
-            (.init(id: 1, name: String(localized: "Settings"), next: true), .settings),
+            (.init(name: String(localized: "Music"), next: true), .music),
+        ]
+        entries += menuPreferences.mainMenuShortcuts.map {
+            (Menu(name: $0.title, next: true), $0.route)
+        }
+        entries += [
+            (.init(name: String(localized: "Settings"), next: true), .settings),
+            (.init(name: String(localized: "Shuffle Songs"), next: false), .player(source: .shuffleAll, trackIndex: 0)),
         ]
         if !authManager.isAuthorized {
-            entries.append((.init(id: 2, name: String(localized: "Sign In"), next: true), .signIn))
+            entries.append((.init(name: String(localized: "Sign In"), next: true), .signIn))
         }
         if playerManager.currentTrack != nil {
-            entries.append((.init(id: 3, name: String(localized: "Now Playing"), next: true), .nowPlaying))
+            entries.append((.init(name: String(localized: "Now Playing"), next: true), .nowPlaying))
         }
         return entries
     }
