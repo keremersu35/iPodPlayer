@@ -169,18 +169,16 @@ struct iPlayrSeekButton: View {
             .contentShape(Rectangle())
             .scaleEffect(isPressed ? 0.9 : 1.0)
             .onTapGesture(perform: onTapAction)
-            .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 50,
-                               pressing: { pressing in
-                                   withAnimation(.easeInOut(duration: 0.1)) {
-                                       isPressed = pressing
-                                   }
-                                   if pressing {
-                                       onLongPressStart()
-                                   } else {
-                                       onLongPressEnd()
-                                   }
-                               },
-                               perform: {})
+            .onLongPressGesture(minimumDuration: 0.5, maximumDistance: 50) {
+                onLongPressStart()
+            } onPressingChanged: { pressing in
+                withAnimation(.easeInOut(duration: 0.1)) {
+                    isPressed = pressing
+                }
+                if !pressing {
+                    onLongPressEnd()
+                }
+            }
             .accessibilityLabel(accessibilityLabel)
             .accessibilityAddTraits(.isButton)
     }
